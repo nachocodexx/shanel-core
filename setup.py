@@ -13,7 +13,6 @@ setup(
         "security",
         "security.cryptosystem",
         "interfaces",
-        "constants"
     ],
     # Needed for dependencies
     install_requires=['numpy'],
