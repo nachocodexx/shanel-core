@@ -7,7 +7,13 @@ setup(
     author='Shanel Reyes',
     author_email='shanel.reyes@cinvestav.mx',
     # Needed to actually package something
-    packages=['logger',"utils","security","security.cryptosystem","interfaces"],
+    packages=[
+        'logger',
+        "utils",
+        "security",
+        "security.cryptosystem",
+        "interfaces"
+    ],
     # Needed for dependencies
     install_requires=['numpy'],
     # *strongly* suggested for sharing
