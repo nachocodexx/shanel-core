@@ -1,17 +1,10 @@
 import numpy as np
 import pandas as pd
 import requests
+from constants import Constants
 # from core.security.cryptosystem.liu import Liu
 from uuid import uuid4
 # ___________________________________________________
-class Constants(object):
-    class ClusteringStatus(object):
-        COMPLETED        = 0
-        START            = 1
-        WORK_IN_PROGRESS = 2
-    class ClusteringAlgorithms(object):
-        SK_MEANS   = "SK_MEANS"
-        DBSK_MEANS = "DBSK_MEANS"
 
 class Utils(object):
         # ALGORITHMS = {"SK_MEANS":"SK_MEANS","DBSK_MEANS":"DBSK_MEANS"}
