@@ -23,7 +23,7 @@ class Utils(object):
         pass
 
     def test():
-        print("TESTING")
+        print("TESTING_v2")
     def repeatRequestByHeaders(**kwargs):
         STATUS          = {"COMPLETED":0,"START":1,"WORK_IN_PROGRESS":2}
         initial_headers = kwargs.get("headers",{})
