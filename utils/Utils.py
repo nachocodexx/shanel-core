@@ -240,25 +240,22 @@ class Utils(object):
         return np.distance.euclidean(D[x][z],D[y][z])
 
     def create_UDM(**kwargs):
-
-        D = kwargs.get("plaintext_matrix")
-
-        a = kwargs.get("attributes",np.array(D).shape[1])
-
+        D      = kwargs.get("plaintext_matrix")
+        DShape = Utils.getShapeOfMatrix(D)
+        # DShape = (3,4)
+        a = kwargs.get("attributes",DShape[1])
         U = []
-        
         # fx = self.euclideanDistance   
         fx = Utils.fxTesis    
 
-        for x in range(len(D)):  # Construcción de U vacia (Solo el triangulo inferior)
-            U.append([])
-            for y in range(x+1):
+        for x in range(DShape[0]):  # Construcción de U vacia 
+            U.append([]) 
+            for y in range(DShape[0]):
                 U[x].append([])
                 for z in range(a):
                     U[x][y].append([])
-                    # ___________________________________________
-                    U[x][y][z] = fx(D,x,y,z)
-                    # ___________________________________________
+                    value = fx(D,x,y,z)
+                    U[x][y][z]=value
         return U
 
     def empty_cluster(**kwargs):
