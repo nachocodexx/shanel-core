@@ -77,7 +77,9 @@ class Utils(object):
     def saveMatrix(**kwargs):
         path   = kwargs.get("path")
         matrix = kwargs.get("matrix")
-        with open(path,"wb") as f:
+        mode   = kwargs.get("mode","wb")
+        # _______________________________
+        with open(path,mode) as f:
             np.save(f,matrix)
             
 
