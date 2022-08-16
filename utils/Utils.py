@@ -32,7 +32,8 @@ class Utils(object):
 
     def loadMatrix(**kwargs):
         path = kwargs.get("path")
-        xs   = np.load(path,allow_pickle=True)
+        allow_pickle = kwargs.get("allow_pickle",False)
+        xs   = np.load(path,allow_pickle=allow_pickle)
         return xs
     
     def getShapeOfMatrix(xs):
