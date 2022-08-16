@@ -56,11 +56,23 @@ class Utils(object):
     def downloadAndSaveFile(**kwargs):
         URL      = kwargs.get("URL")
         path     = kwargs.get("path")
+        mode     = kwargs.get("mode","wb")
         response = requests.get(URL,timeout=100)
         # __________________________
-        with open(path,"wb") as f:
+        with open(path,mode) as f:
             f.write(response.content)
             
+    def downloadAndSaveFileV2(**kwargs):
+        URL       = kwargs.get("URL")
+        path      = kwargs.get("path")
+        mode      = kwargs.get("mode","wb")
+        chunkSize = kwargs.get("chunkSize",1024)
+        response = requests.get(URL,timeout=100)
+        # __________________________
+        with open(path,mode) as f:
+            for chunk in response.iter_content(chunkSize):
+                f.write(chunk)
+            # f.write(response.content)
 
     def saveMatrix(**kwargs):
         path   = kwargs.get("path")
