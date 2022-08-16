@@ -43,26 +43,19 @@ class Utils(object):
             return np.array(xs).shape
 
 
-    # def loadMatrix(**kwargs):
-    #     path = kwargs.get("path")
-    #     with open(path,"rb") as f:
-    #         return np.load(f,allow_pickle=True)
-        
-        # condition       = kwargs.get()
-        # while(condition)
-
     def downloadSaveAndLoad(**kwargs):
         try:
             Utils.downloadAndSaveFile(**kwargs)
             return Utils.loadMatrix(**kwargs)
         except Exception as e:
-            print(e)
+            print("DOWNLOAD_SAVE_LOAD_ERROR",e)
+            return e
             # return None
 
     def downloadAndSaveFile(**kwargs):
         URL      = kwargs.get("URL")
         path     = kwargs.get("path")
-        response = requests.get(URL)
+        response = requests.get(URL,timeout=100)
         # __________________________
         with open(path,"wb") as f:
             f.write(response.content)

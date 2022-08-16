@@ -27,12 +27,14 @@ class SecureClusteringWorker(object):
     def SKMeans_1(self,**kwargs) -> Response:
         return self.session.post(
             "http://{}:{}/clustering/skmeans/1".format(self.workerId,self.port),
-             headers = kwargs
+             headers = kwargs,
+             timeout = 100
         )
 
     def SKMeans_2(self,**kwargs) -> Response:
         return self.session.post(
             "http://{}:{}/clustering/skmeans/2".format(self.workerId,self.port),
-             headers = kwargs
+             headers = kwargs,
+             timeout = 100
         )
         # self.
