@@ -49,29 +49,37 @@ class Utils(object):
             Utils.downloadAndSaveFile(**kwargs)
             return Utils.loadMatrix(**kwargs)
         except Exception as e:
-            print("DOWNLOAD_SAVE_LOAD_ERROR",e)
-            return e
+            raise e
+            # return e
             # return None
 
     def downloadAndSaveFile(**kwargs):
-        URL      = kwargs.get("URL")
-        path     = kwargs.get("path")
-        mode     = kwargs.get("mode","wb")
-        response = requests.get(URL,timeout=100)
-        # __________________________
-        with open(path,mode) as f:
-            f.write(response.content)
+        try:
+            URL      = kwargs.get("URL")
+            path     = kwargs.get("path")
+            mode     = kwargs.get("mode","wb")
+            response = requests.get(URL,timeout=100)
+            # __________________________
+            with open(path,mode) as f:
+                f.write(response.content)
+            return 
+        except Exception as e:
+            raise e
             
     def downloadAndSaveFileV2(**kwargs):
-        URL       = kwargs.get("URL")
-        path      = kwargs.get("path")
-        mode      = kwargs.get("mode","wb")
-        chunkSize = kwargs.get("chunkSize",1024)
-        response = requests.get(URL,timeout=100)
-        # __________________________
-        with open(path,mode) as f:
-            for chunk in response.iter_content(chunkSize):
-                f.write(chunk)
+        try:
+            URL       = kwargs.get("URL")
+            path      = kwargs.get("path")
+            mode      = kwargs.get("mode","wb")
+            chunkSize = kwargs.get("chunkSize",1024)
+            response = requests.get(URL,timeout=100)
+            # __________________________
+            with open(path,mode) as f:
+                for chunk in response.iter_content(chunkSize):
+                    f.write(chunk)
+            return 
+        except Exception as e:
+            raise e
             # f.write(response.content)
 
     def saveMatrix(**kwargs):
@@ -81,6 +89,7 @@ class Utils(object):
         # _______________________________
         with open(path,mode) as f:
             np.save(f,matrix)
+        return 
             
 
 
