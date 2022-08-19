@@ -7,18 +7,10 @@ from uuid import uuid4
 # ___________________________________________________
 
 class Utils(object):
-        # ALGORITHMS = {"SK_MEANS":"SK_MEANS","DBSK_MEANS":"DBSK_MEANS"}
-
-    
-    
     def __init__(self):
 
         pass
 
-    def test():
-        print("TESTING_v2")
-    
-    
     def repeatRequestByHeaders(**kwargs):
         STATUS          = {"COMPLETED":0,"START":1,"WORK_IN_PROGRESS":2}
         initial_headers = kwargs.get("headers",{})
@@ -33,10 +25,14 @@ class Utils(object):
 
 
     def loadMatrix(**kwargs):
-        path         = kwargs.get("path")
-        allow_pickle = kwargs.get("allow_pickle",False)
-        xs           = np.load(path,allow_pickle=allow_pickle)
-        return xs
+        try:
+            path         = kwargs.get("path")
+            allow_pickle = kwargs.get("allow_pickle",False)
+            xs           = np.load(path,allow_pickle=allow_pickle)
+            return xs
+        except Exception as e:
+            print(str(e))
+            raise e
     
     def getShapeOfMatrix(xs):
         xsType = type(xs)
@@ -51,6 +47,7 @@ class Utils(object):
             Utils.downloadAndSaveFile(**kwargs)
             return Utils.loadMatrix(**kwargs)
         except Exception as e:
+            print(str(e))
             raise e
             # return e
             # return None
@@ -66,8 +63,9 @@ class Utils(object):
             # __________________________
             with open(path,mode) as f:
                 f.write(response.content)
-            return 
+            return
         except Exception as e:
+            print(str(e))
             raise e
             
     def downloadAndSaveFileV2(**kwargs):
@@ -83,17 +81,22 @@ class Utils(object):
                     f.write(chunk)
             return 
         except Exception as e:
+            print(e)
             raise e
             # f.write(response.content)
 
     def saveMatrix(**kwargs):
-        path   = kwargs.get("path")
-        matrix = kwargs.get("matrix")
-        mode   = kwargs.get("mode","wb")
-        # _______________________________
-        with open(path,mode) as f:
-            np.save(f,matrix)
-        return 
+        try:
+            path   = kwargs.get("path")
+            matrix = kwargs.get("matrix")
+            mode   = kwargs.get("mode","wb")
+            # _______________________________
+            with open(path,mode) as f:
+                np.save(f,matrix)
+            return 
+        except Exception as e:
+            print(e)
+            raise e
             
 
 
@@ -147,28 +150,32 @@ class Utils(object):
 		m: number of attributes of SK
 	"""
     def calculateCentroids(**kwargs):
-        C          = kwargs.get("clusters")
-        k          = kwargs.get("k")
-        a          = kwargs.get("attributes")
-        m          = kwargs.get("m")
-        Liu        = kwargs.get("Liu")
-        # Definir cent vacio
-        Cent    = np.zeros((k,a,m)).tolist()
-        # _________________________________________
-        for j in range(k):
-            Average = np.zeros((a,m)).tolist()
-            for i in range(len(C[j])): 
-                Rec1 = C[j][i]
+        try:
+            C          = kwargs.get("clusters")
+            k          = kwargs.get("k")
+            a          = kwargs.get("attributes")
+            m          = kwargs.get("m")
+            Liu        = kwargs.get("Liu")
+            # Definir cent vacio
+            Cent    = np.zeros((k,a,m)).tolist()
+            # _________________________________________
+            for j in range(k):
+                Average = np.zeros((a,m)).tolist()
+                for i in range(len(C[j])): 
+                    Rec1 = C[j][i]
+                    for q in range(a):
+                        E1 = Average[q]
+                        E2 = Rec1[q]
+                        Average[q] = Liu.add(E1,E2)
                 for q in range(a):
+                    v1 = 1/len(C[j])
                     E1 = Average[q]
-                    E2 = Rec1[q]
-                    Average[q] = Liu.add(E1,E2)
-            for q in range(a):
-                v1 = 1/len(C[j])
-                E1 = Average[q]
-                Cent[j][q] = Liu.multiply_c(v1,E1)
-        #  ______________________________________________________
-        return Cent
+                    Cent[j][q] = Liu.multiply_c(v1,E1)
+            #  ______________________________________________________
+            return Cent
+        except Exception as e:
+            print(e)
+            raise e
 
     """
 	description: Assign remaining registers of D1 to clusters
@@ -182,40 +189,44 @@ class Utils(object):
 		k: Number of clusters
 	"""
     def populateClusters(**kwargs):
-        rid    = kwargs.get("record_id",0)
-        U      = kwargs.get("UDM")
-        # _______________________________________
-        C      = kwargs.get("clusters")
-        # ________________________________________
-        D1     = kwargs.get("ciphertext_matrix")
-        Cent_i = kwargs.get("centroids",None)
-        a      = kwargs.get("attributes",np.array(D1).shape[1])
+        try:
+            rid    = kwargs.get("record_id",0)
+            U      = kwargs.get("UDM")
+            # _______________________________________
+            C      = kwargs.get("clusters")
+            # ________________________________________
+            D1     = kwargs.get("ciphertext_matrix")
+            Cent_i = kwargs.get("centroids",None)
+            a      = kwargs.get("attributes",np.array(D1).shape[1])
 
-        def fx(**kwargs):
-            limit = kwargs.get("limit")
-            sim   = kwargs.get("sim")
-            x,y   = kwargs.get("xy",(0,0))
-            for z in range(limit):
-                sim = sim + abs(U[x][y][z])
-            return sim
-    
-        #de k+1 al tamaño de D1
-        for x in range(rid,len(D1)): 
-            sim1 = []
-            #desde 0 hasta k
-            for y in range( len(C) ): 
-                sim = 0
-                #Se revisa U completa
-                if y > x: 
-                    sim = fx(limit = a, sim = sim, xy = (y,x))
-                else:
-                    sim = fx(limit = a, sim = sim, xy = (x,y))
-                sim1.append(sim)
-            #Se ubica el elemento con la menor distancia    
-            id = sim1.index(min(sim1)) 
-            #El elemento mas cercano se coloca en C
-            C[id].append(D1[x]) 
-        return C
+            def fx(**kwargs):
+                limit = kwargs.get("limit")
+                sim   = kwargs.get("sim")
+                x,y   = kwargs.get("xy",(0,0))
+                for z in range(limit):
+                    sim = sim + abs(U[x][y][z])
+                return sim
+        
+            #de k+1 al tamaño de D1
+            for x in range(rid,len(D1)): 
+                sim1 = []
+                #desde 0 hasta k
+                for y in range( len(C) ): 
+                    sim = 0
+                    #Se revisa U completa
+                    if y > x: 
+                        sim = fx(limit = a, sim = sim, xy = (y,x))
+                    else:
+                        sim = fx(limit = a, sim = sim, xy = (x,y))
+                    sim1.append(sim)
+                #Se ubica el elemento con la menor distancia    
+                id = sim1.index(min(sim1)) 
+                #El elemento mas cercano se coloca en C
+                C[id].append(D1[x]) 
+            return C
+        except Exception as e:
+            print(e)
+            raise e
             # for z in range(a): #desde 0 hasta el total de atributos
                 # sim = sim + abs(U[y][x][z])
 
@@ -268,23 +279,27 @@ class Utils(object):
         return np.distance.euclidean(D[x][z],D[y][z])
 
     def create_UDM(**kwargs):
-        D      = kwargs.get("plaintext_matrix")
-        DShape = Utils.getShapeOfMatrix(D)
-        # DShape = (3,4)
-        a = kwargs.get("attributes",DShape[1])
-        U = []
-        # fx = self.euclideanDistance   
-        fx = Utils.fxTesis    
+        try:
+            D      = kwargs.get("plaintext_matrix")
+            DShape = Utils.getShapeOfMatrix(D)
+            # DShape = (3,4)
+            a = kwargs.get("attributes",DShape[1])
+            U = []
+            # fx = self.euclideanDistance   
+            fx = Utils.fxTesis    
 
-        for x in range(DShape[0]):  # Construcción de U vacia 
-            U.append([]) 
-            for y in range(DShape[0]):
-                U[x].append([])
-                for z in range(a):
-                    U[x][y].append([])
-                    value = fx(D,x,y,z)
-                    U[x][y][z]=value
-        return U
+            for x in range(DShape[0]):  # Construcción de U vacia 
+                U.append([]) 
+                for y in range(DShape[0]):
+                    U[x].append([])
+                    for z in range(a):
+                        U[x][y].append([])
+                        value = fx(D,x,y,z)
+                        U[x][y][z]=value
+            return U
+        except Exception as e:
+            print(e)
+            raise e
 
     def empty_cluster(**kwargs):
         k = kwargs.get("k",3)
