@@ -161,17 +161,22 @@ class Utils(object):
             # _________________________________________
             for j in range(k):
                 average = np.zeros((a,m)).tolist()
-                cjLen = len(C[j])
-                for i in range(cjLen): 
-                    rec1 = C[j][i]
+                cjLen   = len(C[j])
+                if(cjLen  == 0):
                     for q in range(a):
+                        cent[j][q] = 0.0
+                else:
+                    for i in range(cjLen): 
+                        rec1 = C[j][i]
+                        for q in range(a):
+                            E1 = average[q]
+                            E2 = rec1[q]
+                            average[q] = Liu.add(E1,E2)
+                    
+                    for q in range(a):
+                        v1 = 1/cjLen
                         E1 = average[q]
-                        E2 = rec1[q]
-                        average[q] = Liu.add(E1,E2)
-                for q in range(a):
-                    v1 = 1/cjLen
-                    E1 = average[q]
-                    cent[j][q] = Liu.multiply_c(v1,E1)
+                        cent[j][q] = Liu.multiply_c(v1,E1)
             #  ______________________________________________________
             return cent
         except Exception as e:
