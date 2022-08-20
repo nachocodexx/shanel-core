@@ -166,7 +166,7 @@ class Utils(object):
 
                 if(cjLen  == 0):
                     for q in range(a):
-                        cent[j][q] = [0.0]
+                        cent[j][q] = np.zeros((a,m))
                 else:
                     for i in range(cjLen): 
                         rec1 = C[j][i]
