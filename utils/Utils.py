@@ -157,22 +157,23 @@ class Utils(object):
             m          = kwargs.get("m")
             Liu        = kwargs.get("Liu")
             # Definir cent vacio
-            Cent    = np.zeros((k,a,m)).tolist()
+            cent    = np.zeros((k,a,m)).tolist()
             # _________________________________________
             for j in range(k):
-                Average = np.zeros((a,m)).tolist()
-                for i in range(len(C[j])): 
-                    Rec1 = C[j][i]
+                average = np.zeros((a,m)).tolist()
+                cjLen = len(C[j])
+                for i in range(cjLen): 
+                    rec1 = C[j][i]
                     for q in range(a):
-                        E1 = Average[q]
-                        E2 = Rec1[q]
-                        Average[q] = Liu.add(E1,E2)
+                        E1 = average[q]
+                        E2 = rec1[q]
+                        average[q] = Liu.add(E1,E2)
                 for q in range(a):
-                    v1 = 1/len(C[j])
-                    E1 = Average[q]
-                    Cent[j][q] = Liu.multiply_c(v1,E1)
+                    v1 = 1/cjLen
+                    E1 = average[q]
+                    cent[j][q] = Liu.multiply_c(v1,E1)
             #  ______________________________________________________
-            return Cent
+            return cent
         except Exception as e:
             print(e)
             raise e
@@ -190,14 +191,15 @@ class Utils(object):
 	"""
     def populateClusters(**kwargs):
         try:
-            rid    = kwargs.get("record_id",0)
-            U      = kwargs.get("UDM")
+            rid     = kwargs.get("record_id",0)
+            U       = kwargs.get("UDM")
             # _______________________________________
-            C      = kwargs.get("clusters")
+            C       = kwargs.get("clusters")
             # ________________________________________
-            D1     = kwargs.get("ciphertext_matrix")
-            Cent_i = kwargs.get("centroids",None)
-            a      = kwargs.get("attributes",np.array(D1).shape[1])
+            D1      = kwargs.get("ciphertext_matrix")
+            D1Shape = Utils.getShapeOfMatrix(D1)
+            Cent_i  = kwargs.get("centroids",None)
+            a       = kwargs.get("attributes",D1Shape[1])
 
             def fx(**kwargs):
                 limit = kwargs.get("limit")
