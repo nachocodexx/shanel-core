@@ -161,10 +161,12 @@ class Utils(object):
             # _________________________________________
             for j in range(k):
                 average = np.zeros((a,m)).tolist()
+                
                 cjLen   = len(C[j])
+
                 if(cjLen  == 0):
                     for q in range(a):
-                        cent[j][q] = 0.0
+                        cent[j][q] = [0.0]
                 else:
                     for i in range(cjLen): 
                         rec1 = C[j][i]
@@ -218,7 +220,7 @@ class Utils(object):
             for x in range(rid,len(D1)): 
                 sim1 = []
                 #desde 0 hasta k
-                for y in range( len(C) ): 
+                for y in range(len(C)): 
                     sim = 0
                     #Se revisa U completa
                     if y > x: 
