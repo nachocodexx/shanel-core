@@ -17,13 +17,10 @@ class DataOwner(object):
 
     def __init__(self,**kwargs):
         m               = kwargs.get("m")
-        # 
         liu_scheme      = kwargs.get("liu_scheme")
-        # _________________________________________________ 
         self.m          = m 
         self.liu_scheme = liu_scheme
         self.sk         = self.liu_scheme.secretKey( m = self.m )
-
 
     def setM(self,m):
         self.m = m
@@ -41,10 +38,8 @@ class DataOwner(object):
         # ____________
         #   Transform: rawD -> D(numeric) 
         # ___________
-        # plaintext_matrix
         D      = kwargs.get("plaintext_matrix",[[]])
         Dshape = Utils.getShapeOfMatrix(D)
-        # a = kwargs.get("attributes",  np.array(D).shape[1]  )
         a = kwargs.get("attributes",  Dshape[1] )
         # D1: ciphertext_matrix, U: UDM  
         D1 = self.liu_scheme.encryptMatrix(
@@ -52,7 +47,6 @@ class DataOwner(object):
             secret_key       = self.sk,
             m                = self.m
         )
-        # ___________________________________________
         U  = Utils.create_UDM(plaintext_matrix = D)
         return D1,U
 
@@ -91,12 +85,4 @@ class DataOwner(object):
                 m                 = self.m
             )
             Ss.append(S)
-        # S1 = []
-        # for ys in cipher_cluster:
-            # S2 = []
-            # for z in ys:
-                # Descifrado con el esquema de Liu
-                # S2.append(self.liu_scheme.decrypt(z, self.sk, self.m))
-            # S1.append(S2)
-        # S.append(S1)
         return Ss
