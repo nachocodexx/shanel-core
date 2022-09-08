@@ -205,8 +205,12 @@ class Utils(object):
             # ________________________________________
             D1      = kwargs.get("ciphertext_matrix")
             D1Shape = Utils.getShapeOfMatrix(D1)
+            
             Cent_i  = kwargs.get("centroids",None)
+
             a       = kwargs.get("attributes",D1Shape[1])
+
+            label_vector = []
 
             def fx(**kwargs):
                 limit = kwargs.get("limit")
@@ -230,9 +234,11 @@ class Utils(object):
                     sim1.append(sim)
                 #Se ubica el elemento con la menor distancia    
                 id = sim1.index(min(sim1)) 
+                label_vector.append(id)
+
                 #El elemento mas cercano se coloca en C
                 C[id].append(D1[x]) 
-            return C
+            return C,label_vector
         except Exception as e:
             print(e)
             raise e
