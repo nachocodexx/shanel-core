@@ -319,3 +319,42 @@ class Utils(object):
     def empty_cluster(**kwargs):
         k = kwargs.get("k",3)
         return [[] for i in range(k)]
+
+    """
+    description: EUDM matrix calculation
+    attributes:
+        D: numeric dataset
+        a: number of attributes of D
+    """
+    def calculateUDM(self,**kwargs): #Calculo de la matriz UDM
+        D      = kwargs.get("plaintext_matrix")
+        DShape = Utils.getShapeOfMatrix(D)
+        a = kwargs.get("attributes",DShape[1]) 
+        EU = []
+        EU  = Utils.create_UDM(plaintext_matrix = D)
+        for x in range(len(D)): #Llenado de U con distancias entre los datos en plano
+            EUy = []
+            for y in range(x+1):
+                EUz = []
+                for z in range(a):
+                    EU[x][y][z] = (D[x][z] - D[y][z]) #Calculo de distancias
+        return EU
+    
+    """
+    description: EDM matrix calculation
+    attributes:
+        D: numeric dataset
+        a: number of attributes of D
+    """
+    def calculateDM(self, D,a): #Calculo de la matriz DM
+        ED = []
+        for x in range(len(D)): ##Construcción de ED vacia (Solo el triangulo inferior)
+            ED.append([])
+            for y in range(x+1): #
+                ED[x].append([])
+        for x in range(len(D)): #Llenado de U con distancias entre los datos en plano
+            EDy = []	
+            for y in range(x+1):
+                for z in range(a):
+                    ED[x][y] = abs(D[x][z] - D[x][z]) #Calculo de distancias
+        return ED
