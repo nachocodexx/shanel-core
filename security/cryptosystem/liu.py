@@ -157,6 +157,9 @@ class Liu(object):
 		for i in range(m-1):
 			ti = sk[i][2]
 			t += ti
+		#print('E',E)
+		#print("Uno",(E[m-1]))
+		#print("Dos",(sk[m-1][0] + sk[m-1][1] + sk[m-1][2]))
 		s = (E[m-1]) / (sk[m-1][0] + sk[m-1][1] + sk[m-1][2])
 		for i in range(m-1):
 			ei = (E[i] - s * sk[i][1])/ sk[i][0]

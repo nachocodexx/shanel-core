@@ -158,15 +158,17 @@ class Utils(object):
             Liu        = kwargs.get("Liu")
             # Definir cent vacio
             cent    = np.zeros((k,a,m)).tolist()
+            
             # _________________________________________
             for j in range(k):
                 average = np.zeros((a,m)).tolist()
                 
                 cjLen   = len(C[j])
-
+                
                 if(cjLen  == 0):
-                    for q in range(a):
-                        cent[j][q] = np.zeros((a,m))
+                    #pass
+                    #for q in range(a):
+                    cent[j]= np.zeros((a,m)).tolist()
                 else:
                     for i in range(cjLen): 
                         rec1 = C[j][i]
@@ -180,7 +182,10 @@ class Utils(object):
                         E1 = average[q]
                         cent[j][q] = Liu.multiply_c(v1,E1)
             #  ______________________________________________________
+            #print(cent)
+            #print("_"*100)
             return cent
+
         except Exception as e:
             print(e)
             raise e
@@ -326,7 +331,7 @@ class Utils(object):
         D: numeric dataset
         a: number of attributes of D
     """
-    def calculateUDM(self,**kwargs): #Calculo de la matriz UDM
+    def calculateUDM(**kwargs): #Calculo de la matriz UDM
         D      = kwargs.get("plaintext_matrix")
         DShape = Utils.getShapeOfMatrix(D)
         a = kwargs.get("attributes",DShape[1]) 

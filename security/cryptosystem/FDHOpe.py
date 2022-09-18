@@ -52,8 +52,8 @@ class FDHOpe(object):
     def encrypt(**kwargs): #
         v     = kwargs.get("v")
         sens  = kwargs.get("sens",0.01)
-        mapM  = kwargs.get("messageIntervals") # message Interval
-        mapC  = kwargs.get("cypherIntervals") # cipher Interval
+        mapM  = kwargs.get("messageIntervals")
+        mapC  = kwargs.get("cypherIntervals")
         t     = len(mapM)
         index = -1
         for i in range(t):
@@ -69,6 +69,7 @@ class FDHOpe(object):
         vp = intervalC[1] + scale_i * (abs(v) - intervalM[1]) + delta_i #Cambio
         if (v < 0):
             vp = vp * (-1)
+        #print("vp",vp)
         return vp
 
     def findMax(D):

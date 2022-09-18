@@ -1,6 +1,6 @@
 import numpy as np
 from utils.Utils import Utils
-from FDHOpe import FDHOpe
+from .FDHOpe import FDHOpe
 
 """
 Description:
@@ -22,7 +22,7 @@ class DataOwner(object):
 	def __init__(self,**kwargs):
 		m               = kwargs.get("m")
 		liu_scheme      = kwargs.get("liu_scheme")
-		self.sens       = kwargs("sens",0.01)
+		self.sens       = kwargs.get("sens",0.01)
 		self.m          = m 
 		self.liu_scheme = liu_scheme
 		self.sk         = self.liu_scheme.secretKey( m = self.m )
@@ -71,7 +71,7 @@ class DataOwner(object):
 		D1 = self.liu_scheme.encryptMatrix(
 			plaintext_matrix = D,
 			secret_key       = self.sk,
-			m                = self.mp
+			m                = self.m
 		)
 
 		EU  = Utils.calculateUDM(plaintext_matrix = D)
@@ -108,6 +108,9 @@ class DataOwner(object):
 			m                 = self.m
 		)
 		return S
+
+	
+
 
 	"""
 	description: decrypt final clusters
