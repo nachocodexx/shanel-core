@@ -166,8 +166,6 @@ class Utils(object):
                 cjLen   = len(C[j])
                 
                 if(cjLen  == 0):
-                    #pass
-                    #for q in range(a):
                     cent[j]= np.zeros((a,m)).tolist()
                 else:
                     for i in range(cjLen): 
@@ -205,18 +203,13 @@ class Utils(object):
         try:
             rid     = kwargs.get("record_id",0)
             U       = kwargs.get("UDM")
-            # _______________________________________
             C       = kwargs.get("clusters")
-            # ________________________________________
             D1      = kwargs.get("ciphertext_matrix")
             D1Shape = Utils.getShapeOfMatrix(D1)
-            
             Cent_i  = kwargs.get("centroids",None)
-
             a       = kwargs.get("attributes",D1Shape[1])
-
             label_vector = []
-
+            
             def fx(**kwargs):
                 limit = kwargs.get("limit")
                 sim   = kwargs.get("sim")
