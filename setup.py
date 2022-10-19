@@ -14,19 +14,12 @@ setup(
         "security.cryptosystem",
         "interfaces",
         "validationindex",
-<<<<<<< HEAD
-        "clustering.secure",
-=======
->>>>>>> e58834eead41818f21d99128c0ea36d07690b0e5
+        "clustering.secure"
     ],
     # Needed for dependencies
     install_requires=['numpy','sklearn'],
     # *strongly* suggested for sharing
-<<<<<<< HEAD
-    version='0.19',
-=======
-    version='0.18',
->>>>>>> e58834eead41818f21d99128c0ea36d07690b0e5
+    version='0.20',
     # The license can be anything you like
     license='MIT',
     description='An example of a python package from pre-existing code',

@@ -13,7 +13,6 @@ def create_logger(**kwargs):
     filename      = "{}/{}.csv".format(LOG_PATH,LOG_FILENAME)
     errorFilename = "{}/{}-error.log".format(LOG_PATH,LOG_FILENAME)
     # 
-    # 
     logger      = logging.getLogger(name)
     # ___________________________________
     consolehanlder =logging.StreamHandler(sys.stdout)
