@@ -1,6 +1,18 @@
 import numpy as np
 from utils.Utils import Utils
 from .FDHOpe import FDHOpe
+from time import time
+
+
+class OutsourceDataStats(object):
+	def __init__(self,**kwargs):
+		self.udm_time              = kwargs.get("udm_time",0)
+		self.UDM                   = kwargs.get("UDM",np.array([]))
+		self.encrypted_matrix      = kwargs.get("encrypted_matrix",np.array([]))
+		self.encrypted_matrix_time = kwargs.get("encrypted_matrix_time",np.array([]))
+	
+
+
 
 """
 Description:
@@ -54,6 +66,75 @@ class DataOwner(object):
 		)
 		U  = Utils.create_UDM(plaintext_matrix = D)
 		return D1,U
+
+	"""
+	description: Data preparation.
+	attributes: 
+		rawD: original dataset
+		D: numeric dataset
+		a: number of attributes of D
+		m: number of attributes of SK
+	"""
+	def outsourcedDataAndStats(self,**kwargs):
+		# ____________
+		#   Transform: rawD -> D(numeric) 
+		# ___________
+		D      = kwargs.get("plaintext_matrix",[[]])
+		Dshape = Utils.getShapeOfMatrix(D)
+		a = kwargs.get("attributes",  Dshape[1] )
+		# D1: ciphertext_matrix, U: UDM  
+		start_time_d1 = time()
+		D1 = self.liu_scheme.encryptMatrix(
+			plaintext_matrix = D,
+			secret_key       = self.sk,
+			m                = self.m
+		)
+		d1_time = time() - start_time_d1
+		
+		start_time_udm = time()
+		U  = Utils.create_UDM(plaintext_matrix = D)
+		udm_time = time()  - start_time_udm
+		return OutsourceDataStats(
+			UDM = U,
+			udm_time = udm_time, 
+			encrypted_matrix = D1,
+			encrypted_matrix_time = d1_time
+		)
+
+	"""
+	description: Data preparation.
+	attributes: 
+		rawD: original dataset
+		D: numeric dataset
+		a: number of attributes of D
+		m: number of attributes of SK
+	"""
+	def outsourcedDataVectorizeAndStats(self,**kwargs):
+		# ____________
+		#   Transform: rawD -> D(numeric) 
+		# ___________
+		D      = kwargs.get("plaintext_matrix",[[]])
+		Dshape = Utils.getShapeOfMatrix(D)
+		a      = kwargs.get("attributes",  Dshape[1] )
+		# D1: ciphertext_matrix, U: UDM  
+		start_time_d1 = time()
+		D1     = self.liu_scheme.vectorizeEncryptMatrix(
+			plaintext_matrix = D,
+			secret_key       = self.sk,
+			m                = self.m
+		)
+		d1_time = time() - start_time_d1
+		
+		start_time_udm = time()
+		U  = Utils.create_UDM(plaintext_matrix = D)
+		udm_time = time()  - start_time_udm
+		return OutsourceDataStats(
+			UDM = U,
+			udm_time = udm_time, 
+			encrypted_matrix = D1,
+			encrypted_matrix_time = d1_time
+		)
+
 
 	"""
 	description: Data preparation.

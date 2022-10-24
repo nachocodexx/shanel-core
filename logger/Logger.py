@@ -16,8 +16,9 @@ def create_logger(**kwargs):
     logger      = logging.getLogger(name)
     # ___________________________________
     consolehanlder =logging.StreamHandler(sys.stdout)
-    consolehanlder.setLevel(logging.DEBUG)
     consolehanlder.setFormatter(formatter)
+    consolehanlder.setLevel(logging.DEBUG)
+    consolehanlder.addFilter(lambda record: record.levelno == logging.DEBUG)
     # 
     filehandler = logging.FileHandler(filename= filename)
     filehandler.setFormatter(formatter)

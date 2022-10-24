@@ -26,9 +26,12 @@ class SKMeans(object):
 		self.a              = kwargs.get("num_attributes",np.array(self.D1).shape[1])
 		self.m              = kwargs.get("m",3)
 		self.dataowner      = kwargs.get("dataowner")
-		self.max_iterations = kwargs.get("max_iterations",500)
+		self.max_iterations = kwargs.get("max_iterations",100)
+		# Only for DEBUGGING purposes. 
+		self.L              = kwargs.get("logger",None)
 		
 		C_empty = Utils.empty_cluster(k = self.k)
+		
 		# Conjunto de los primeros k registros en D
 		self.C       = Utils.appends(
 			source  = self.D1, 
@@ -84,6 +87,7 @@ class SKMeans(object):
 		self.label_vector = []
 		# pbar = tqdm(total=self.max_iterations)
 		while not temp: #Se detiene cuando la matriz de desplazamiento S es 0
+			self.L.debug("SKMEANS[{}]".format(self.iteration_counter))
 			C_empty = Utils.empty_cluster(k = self.k)
 
 			__C, label_vector = Utils.populateClusters(
@@ -97,6 +101,7 @@ class SKMeans(object):
 			self.C = C 
 			Cent_i = copy.copy(self.Cent_j) #Reasigna los elementos de cent_j a cent_i
 			
+			self.L.debug("SKMEANS[{}] CALCULATE_CENTROIDS".format(self.iteration_counter))
 			self.Cent_j = Utils.calculateCentroids(
 				clusters   = self.C,
 				k          = self.k,
@@ -104,6 +109,7 @@ class SKMeans(object):
 				m          = self.m,
 				Liu        = Liu
 			)
+			self.L.debug("SKMEANS[{}] UPDATE_UDM".format(self.iteration_counter))
 			U, S = self.updateUDM(
 				UDM = self.U,
 				previuous_centroids=Cent_i, 
@@ -111,6 +117,7 @@ class SKMeans(object):
 			)
 			self.U = U
 			temp = Utils.verifyZero(S)
+			self.L.debug("SKMEANS[{}] VERIFY_ZERO={}".format(self.iteration_counter,temp))
 			self.label_vector = label_vector
 			self.iteration_counter += 1
 			if(self.iteration_counter >= self.max_iterations):

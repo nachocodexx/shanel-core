@@ -1,5 +1,24 @@
+from http.cookiejar import LWPCookieJar
 import random
 import numpy as np
+from time import time
+
+
+class EncryptMatrixStats(object):
+	def __init__(self,**kwargs):
+		self.matrix          = kwargs.get("matrix",np.array([]))
+		self.encryption_time = kwargs.get("encryption_time",0)
+	
+	def __str__(self):
+		return "EncryptedMatrixStats({}s)".format(self.encryption_time)
+
+class DecryptMatrixStats(object):
+	def __init__(self,**kwargs):
+		self.matrix          = kwargs.get("matrix",np.array([]))
+		self.decryption_time = kwargs.get("decryption_time",0)
+
+	def __str__(self):
+		return "DecryptedMatrixStats({}s)".format(self.decryption_time)
 
 
 """
@@ -60,6 +79,64 @@ class Liu(object):
 		vs = kwargs.get("plaintext_vector",[])
 		new_kwargs = lambda v: {**{"plaintext":v},**kwargs}
 		return [ self.encryptScalar(**new_kwargs(v)) for v in vs ]
+
+
+ 
+	"""
+	description: Encrypt a plaintext using SK
+	attributes:
+		v: plaintext
+		sk: secret key
+		m: number of attributes of SK
+	constraints:
+		1. E1: sk[0][0] * sk[0][2] * v + sk[0][1] * self.R[m-1] + sk[0][0] * (self.R[0] - self.R[m-2])
+		2. Ei: sk[i][0] * sk[i][2] * v + sk[i][1] * self.R[m-1] + sk[i][0] * (self.R[i] - self.R[i-1])
+		3. Em: sk[m-1][0] + sk[m-1][1] + sk[m-1][2]) * self.R[m-1]
+    """
+	def vectorizeEncryptMatrix(self,**kwargs):
+		plaintext_matrix = kwargs.get("plaintext_matrix")
+		m                = kwargs.get("m")
+		sk               = kwargs.get("secret_key")
+		f                = self.curryingEncryptScalar(sk,m)
+		fx               = np.vectorize(f ,otypes =[object] )
+		start_time       = time()
+		M_               = fx(plaintext_matrix.flatten())
+		end_time         = time()
+		encryption_time  = end_time-start_time
+		return EncryptMatrixStats(matrix = M_, encryption_time = encryption_time )
+		# print("VECTORIZE_TIME {}".format(vt))
+	def curryingEncryptScalar(self,sk,m): 
+		def __inner(v):
+			self.round = True if(type(v) == int or type(v) == np.int64) else False
+			# sk         = kwargs.get("secret_key")
+			# m          = kwargs.get("m",3)
+			self.E     = []
+			self.R     = [ self.generateRandom() for i in range (m) ]
+			#E1 formula
+			e1         =  self.__eEncrypt(
+				ki = sk[0][0],
+				ti = sk[0][2],
+				v  = v, 
+				si = sk[0][1],
+				rm = self.R[m-1],
+				rrdiff = (self.R[0]-self.R[m-2])
+			)
+			self.E.append(e1) 
+			#Ei formula
+			for i in range(1,m-1):
+				ei =  self.__eEncrypt(
+					ki = sk[i][0],
+					ti = sk[i][2],
+					v  = v, 
+					si = sk[i][1],
+					rm = self.R[m-1],
+					rrdiff = (self.R[i]-self.R[i-1])
+				)
+				self.E.append(ei)	
+			#Em Formula
+			self.E.append((sk[m-1][0] + sk[m-1][1] + sk[m-1][2]) * self.R[m-1]) 
+			return self.E
+		return __inner
 
 
 	"""
@@ -141,6 +218,40 @@ class Liu(object):
 		new_kwargs = lambda c: {**{"ciphertext":c},**kwargs}
 		return [ self.decryptScalar(**new_kwargs(c)) for c in cs ]
 
+
+	"""    
+    description: Decrypt a ciphertext using SK
+	attributes:
+		E: ciphertext
+		sk: secret key
+		m: number of attributes of SK
+	"""
+	def curryingDecryptScalar(self,sk,m): 
+		def __inner(E):
+			t,e = 0,0
+			for i in range(m-1):
+				ti = sk[i][2]
+				t += ti
+			s = (E[m-1]) / (sk[m-1][0] + sk[m-1][1] + sk[m-1][2])
+			for i in range(m-1):
+				ei = (E[i] - s * sk[i][1])/ sk[i][0]
+				e += ei
+			v = float(e)/float(t)
+			return int(np.around(v,decimals=2)) if(self.round) else v
+
+		return __inner
+
+	def vectorizeDecryptMatrix(self,**kwargs):
+		plaintext_matrix = kwargs.get("ciphertext_matrix")
+		m                = kwargs.get("m")
+		sk               = kwargs.get("sk")
+		f                = self.curryingDecryptScalar(sk,m)
+		fx               = np.vectorize(f ,otypes =[object] )
+		start_time       = time()
+		M_               = fx(plaintext_matrix.flatten())
+		end_time         = time()
+		decryption_time  = end_time-start_time
+		return DecryptMatrixStats(matrix = M_, decryption_time = decryption_time )
 
 	"""    
     description: Decrypt a ciphertext using SK
