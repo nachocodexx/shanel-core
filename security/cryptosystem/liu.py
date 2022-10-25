@@ -100,7 +100,9 @@ class Liu(object):
 		f                = self.curryingEncryptScalar(sk,m)
 		fx               = np.vectorize(f ,otypes =[object] )
 		start_time       = time()
-		M_               = fx(plaintext_matrix.flatten())
+		# N*a*m
+		M_               = np.asarray(list(map(lambda x: list(x),fx(plaintext_matrix.flatten()).tolist()))).flatten().reshape(plaintext_matrix.shape[0],plaintext_matrix.shape[1],m)
+		# print(M_.shape)
 		end_time         = time()
 		encryption_time  = end_time-start_time
 		return EncryptMatrixStats(matrix = M_, encryption_time = encryption_time )
