@@ -156,7 +156,8 @@ class Liu(object):
 		sk         = kwargs.get("secret_key")
 		m          = kwargs.get("m",3)
 		self.E     = []
-		self.R     = [ self.generateRandom() for i in range (m) ]
+		self.R     = kwargs.get("R",[ self.generateRandom() for i in range (m) ])
+		print(self.R)
 		#E1 formula
 		e1         =  self.__eEncrypt(
 			ki = sk[0][0],
