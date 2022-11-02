@@ -58,14 +58,14 @@ class DataOwner(object):
 		D      = kwargs.get("plaintext_matrix",[[]])
 		Dshape = Utils.getShapeOfMatrix(D)
 		a = kwargs.get("attributes",  Dshape[1] )
-		# D1: ciphertext_matrix, U: UDM  
-		D1 = self.liu_scheme.encryptMatrix(
+		# encryption_result: ciphertext_matrix, U: UDM  
+		encryption_result = self.liu_scheme.encryptMatrix(
 			plaintext_matrix = D,
 			secret_key       = self.sk,
 			m                = self.m
 		)
 		U  = Utils.create_UDM(plaintext_matrix = D)
-		return D1,U
+		return encryption_result,U
 
 	"""
 	description: Data preparation.
@@ -82,9 +82,9 @@ class DataOwner(object):
 		D      = kwargs.get("plaintext_matrix",[[]])
 		Dshape = Utils.getShapeOfMatrix(D)
 		a = kwargs.get("attributes",  Dshape[1] )
-		# D1: ciphertext_matrix, U: UDM  
+		# encryption_result: ciphertext_matrix, U: UDM  
 		start_time_d1 = time()
-		D1 = self.liu_scheme.encryptMatrix(
+		encryption_result = self.liu_scheme.encryptMatrix(
 			plaintext_matrix = D,
 			secret_key       = self.sk,
 			m                = self.m
@@ -97,7 +97,7 @@ class DataOwner(object):
 		return OutsourceDataStats(
 			UDM = U,
 			udm_time = udm_time, 
-			encrypted_matrix = D1,
+			encrypted_matrix = encryption_result,
 			encrypted_matrix_time = d1_time
 		)
 
@@ -113,26 +113,26 @@ class DataOwner(object):
 		# ____________
 		#   Transform: rawD -> D(numeric) 
 		# ___________
-		D      = kwargs.get("plaintext_matrix",[[]])
-		Dshape = Utils.getShapeOfMatrix(D)
-		a      = kwargs.get("attributes",  Dshape[1] )
-		# D1: ciphertext_matrix, U: UDM  
-		start_time_d1 = time()
-		D1     = self.liu_scheme.vectorizeEncryptMatrix(
+		D                 = kwargs.get("plaintext_matrix",[[]])
+		Dshape            = Utils.getShapeOfMatrix(D)
+		N                 = Dshape[0]
+		a                 = kwargs.get("attributes",  Dshape[1] )
+		# 
+		udm_init          = kwargs.get("udm_init","zeros")
+		encryption_result = self.liu_scheme.vectorizeEncryptMatrix(
 			plaintext_matrix = D,
 			secret_key       = self.sk,
 			m                = self.m
 		)
-		d1_time = time() - start_time_d1
-		
-		start_time_udm = time()
-		U  = Utils.create_UDM(plaintext_matrix = D)
-		udm_time = time()  - start_time_udm
+		start_time_udm    = time()
+		U                 = np.zeros((N,N,a)).tolist() if(udm_init == "zeros" )  else Utils.create_UDM(plaintext_matrix = D)
+		udm_time          = time()  - start_time_udm
+		# ________________________________________________________________________________________________________________
 		return OutsourceDataStats(
 			UDM = U,
 			udm_time = udm_time, 
-			encrypted_matrix = D1,
-			encrypted_matrix_time = d1_time
+			encrypted_matrix = encryption_result.matrix,
+			encrypted_matrix_time = encryption_result.encryption_time
 		)
 
 
@@ -149,7 +149,7 @@ class DataOwner(object):
 		Dshape = Utils.getShapeOfMatrix(D)
 		a = kwargs.get("attributes",  Dshape[1] )
 
-		D1 = self.liu_scheme.encryptMatrix(
+		encryption_result = self.liu_scheme.encryptMatrix(
 			plaintext_matrix = D,
 			secret_key       = self.sk,
 			m                = self.m
@@ -169,7 +169,7 @@ class DataOwner(object):
 						cypherIntervals  = self.cypherIntervals
 					) #Función de cifrado de la matriz
 
-		return D1, EU, self.messageIntervals, self.cypherIntervals
+		return encryption_result, EU, self.messageIntervals, self.cypherIntervals
 
 
 	"""
