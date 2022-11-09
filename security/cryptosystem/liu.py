@@ -154,7 +154,7 @@ class Liu(object):
     """
 	def encryptScalar(self,**kwargs): 
 		v          = kwargs.get("plaintext") 
-		self.round = True if(type(v) == int or type(v) == np.int64) else False
+		self.round = kwargs.get("roundd", True if(type(v) == int or type(v) == np.int64) else False)
 		sk         = kwargs.get("secret_key")
 		m          = kwargs.get("m",3)
 		self.E     = []
@@ -270,15 +270,11 @@ class Liu(object):
 		for i in range(m-1):
 			ti = sk[i][2]
 			t += ti
-		#print('E',E)
-		#print("Uno",(E[m-1]))
-		#print("Dos",(sk[m-1][0] + sk[m-1][1] + sk[m-1][2]))
 		s = (E[m-1]) / (sk[m-1][0] + sk[m-1][1] + sk[m-1][2])
 		for i in range(m-1):
 			ei = (E[i] - s * sk[i][1])/ sk[i][0]
 			e += ei
 		v = float(e)/float(t)
-		# print(self.round)
 		return int(np.around(v,decimals=2)) if(self.round) else v
 
 
@@ -288,7 +284,9 @@ class Liu(object):
 		E1: first ciphertext
 		E2: second ciphertext
     """
-	def add(E1, E2):
+	def add(**kwargs):
+		E1  = kwargs.get("ciphertext_1")
+		E2 = kwargs.get("ciphertext_2")
 		return (np.array(E1) + np.array(E2)).tolist()
 
 	# self.E3 = []
@@ -301,7 +299,9 @@ class Liu(object):
 		E1: first ciphertext
 		E2: second ciphertext
     """
-	def multiply(E1, E2):
+	def multiply(**kwargs):
+		E1  = kwargs.get("ciphertext_1")
+		E2 = kwargs.get("ciphertext_2")
 		E3 = []
 		m  = len(E1)
 		for i in range(m):
@@ -317,16 +317,18 @@ class Liu(object):
 		sk: secret key
 		m: number of attributes of SK
     """
-	def verify_mult(self, E, sk, m):
+	def decrypt_multiply(self, **kwargs):
+		E  = kwargs.get("ciphertext")
+		sk = kwargs.get("secret_key")
+		m  = kwargs.get("m")
 		v1,v = [],[]
 		for i in range(len(E)):
 			v1.append(E[i])
 			if ((i%m)==(m-1)):
-				v.append(self.decrypt(v1, sk, m))
+				v.append(self.decryptScalar(ciphertext = v1, secret_key = sk, m = m))
 				v1 = []
-		self.E3 = self.decrypt(v, sk, m)
+		self.E3 = self.decryptScalar(ciphertext = v, secret_key = sk, m = m)
 		return self.E3
-
 
 	""" 
 	description: Multiply a ciphertext by a plaintext
@@ -334,7 +336,9 @@ class Liu(object):
 		v1: plaintext
 		E1: ciphertext
     """
-	def multiply_c(v1, E1):
+	def multiply_c(**kwargs):
+		v1  = kwargs.get("scalar")
+		E1 = kwargs.get("ciphertext_1")
 		E3 = []
 		m  = len(E1)
 		for i in range(m):
@@ -349,9 +353,11 @@ class Liu(object):
 		E2: second ciphertext
 		m: number of attributes of SK
 	"""
-	def subtract(E1, E2):
+	def subtract(**kwargs):
+		E1 = kwargs.get("ciphertext_1")
+		E2 = kwargs.get("ciphertext_2")
 		E3 = []
 		m  = len(E1)
-		s1 = Liu.multiply_c(-1, E2)
-		E3 = Liu.add(E1, s1)
+		s1 = Liu.multiply_c(scalar = -1, ciphertext_1 = E2)
+		E3 = Liu.add(ciphertext_1 = E1, ciphertext_2 = s1)
 		return E3

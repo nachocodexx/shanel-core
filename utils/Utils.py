@@ -8,8 +8,16 @@ from uuid import uuid4
 
 class Utils(object):
     def __init__(self):
-
         pass
+
+    def fillLabelVector(**kwargs):
+        label_vector = kwargs.get("label_vector",[])
+        k = kwargs.get("k",2)
+        lv = []
+        for i in range(k):
+            lv.append(i)
+        label_vector = lv + label_vector
+        return label_vector
 
     def repeatRequestByHeaders(**kwargs):
         STATUS          = {"COMPLETED":0,"START":1,"WORK_IN_PROGRESS":2}
@@ -173,12 +181,12 @@ class Utils(object):
                         for q in range(a):
                             E1 = average[q]
                             E2 = rec1[q]
-                            average[q] = Liu.add(E1,E2)
+                            average[q] = Liu.add(ciphertext_1 = E1, ciphertext_2 = E2)
                     
                     for q in range(a):
                         v1 = 1/cjLen
                         E1 = average[q]
-                        cent[j][q] = Liu.multiply_c(v1,E1)
+                        cent[j][q] = Liu.multiply_c(scalar = v1, ciphertext_1 = E1)
             #  ______________________________________________________
             #print(cent)
             #print("_"*100)
