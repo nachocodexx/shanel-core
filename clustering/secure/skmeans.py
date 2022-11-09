@@ -3,6 +3,17 @@ import copy
 from utils.Utils import Utils
 from security.cryptosystem.liu import Liu
 
+class DumbLogger(object):
+	def debug(self,x):
+		return
+	
+	def info(self,x):
+		return
+	
+	def error(self,x):
+		return
+
+
 """
 Description:
 A  class to represent a secure K-means algorithm
@@ -23,13 +34,12 @@ class SKMeans(object):
 		self.U              = kwargs.get("UDM")
 		self.k              = kwargs.get("k",2)
 		D1Shape             = Utils.getShapeOfMatrix(self.D1)
-		
 		self.a              = kwargs.get("num_attributes",D1Shape[1])
 		self.m              = kwargs.get("m",3)
 		self.dataowner      = kwargs.get("dataowner")
 		self.max_iterations = kwargs.get("max_iterations",100)
 		# Only for DEBUGGING purposes. 
-		self.L              = kwargs.get("logger",None)
+		self.L              = kwargs.get("logger",DumbLogger())
 		
 		C_empty = Utils.empty_cluster(k = self.k)
 		
@@ -49,6 +59,7 @@ class SKMeans(object):
 			limit   = self.k
 		) 
 		# _________________________________________ 
+		
 		__C, label_vector = Utils.populateClusters(
             record_id = self.k,
             UDM       = self.U,
@@ -71,6 +82,11 @@ class SKMeans(object):
 			current_centroids=self.Cent_j, 
 		)
 		
+		self.label_vector = Utils.fillLabelVector(
+			label_vector = label_vector,
+			k            = self.k
+		)
+
 		self.S = S
 		self.U = U
 		# ________________________________________
@@ -80,12 +96,10 @@ class SKMeans(object):
 		 	previuous_centroids = self.Cent_j
 		)
 
-	"""
-	"""
 	def run(self,**kwargs):
 		temp   = Utils.verifyZero(self.S)
 		self.iteration_counter = 0
-		self.label_vector = []
+		#self.label_vector = []
 		# pbar = tqdm(total=self.max_iterations)
 		while not temp: #Se detiene cuando la matriz de desplazamiento S es 0
 			self.L.debug("SKMEANS[{}]".format(self.iteration_counter))
@@ -147,7 +161,7 @@ class SKMeans(object):
 		S1     = np.zeros((self.k,self.a,self.m)).tolist()
 		for i in range(len(Cent_i)):
 			for j in range(len(Cent_i[i])):
-				S1[i][j] = Liu.subtract(Cent_i[i][j], Cent_j[i][j]) #Resta con el esquema de Liu	
+				S1[i][j] = Liu.subtract(ciphertext_1 = Cent_i[i][j], ciphertext_2 = Cent_j[i][j]) #Resta con el esquema de Liu	
 		# ______________________________________________________________________________
 		#print(S1)
 		#time.sleep(5)
