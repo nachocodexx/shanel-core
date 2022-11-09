@@ -1,4 +1,3 @@
-
 import numpy as np
 import copy
 from utils.Utils import Utils
@@ -24,7 +23,7 @@ class SKMeans(object):
 		self.U              = kwargs.get("UDM")
 		self.k              = kwargs.get("k",2)
 		D1Shape             = Utils.getShapeOfMatrix(self.D1)
-		# print("SHAPE",D1Shape)
+		
 		self.a              = kwargs.get("num_attributes",D1Shape[1])
 		self.m              = kwargs.get("m",3)
 		self.dataowner      = kwargs.get("dataowner")
