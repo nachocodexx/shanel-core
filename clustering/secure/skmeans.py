@@ -1,4 +1,3 @@
-
 import numpy as np
 import copy
 from utils.Utils import Utils
@@ -97,8 +96,6 @@ class SKMeans(object):
 		 	previuous_centroids = self.Cent_j
 		)
 
-	"""
-	"""
 	def run(self,**kwargs):
 		temp   = Utils.verifyZero(self.S)
 		self.iteration_counter = 0
