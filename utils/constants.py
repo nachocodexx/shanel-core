@@ -7,3 +7,4 @@ class Constants(object):
     class ClusteringAlgorithms(object):
         SK_MEANS   = "SK_MEANS"
         DBSK_MEANS = "DBSK_MEANS"
+        KMEANS     = "KMEANS"
