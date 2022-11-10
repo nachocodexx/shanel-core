@@ -5,6 +5,6 @@ class Constants(object):
         START            = 1
         WORK_IN_PROGRESS = 2
     class ClusteringAlgorithms(object):
-        SK_MEANS   = "SK_MEANS"
-        DBSK_MEANS = "DBSK_MEANS"
+        SKMEANS   = "SKMEANS"
+        DBSKMEANS = "DBSKMEANS"
         KMEANS     = "KMEANS"
