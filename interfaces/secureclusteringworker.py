@@ -14,10 +14,21 @@ class SecureClusteringWorker(object):
         # 
         if(self.algorithm == "SK_MEANS"):
             return  self.SKMeans_1(**kwargs) if(operationIndex==1) else self.SKMeans_2(**kwargs)
-        else: 
+        elif(self.algorithm =="KMEANS"):
+            return self.kmeans(**kwargs)
+        elif (self.algorithm == "DBSKMEANS"): 
             return self.DBSkMeans(**kwargs)
+        else:
+            return Response(None,503)
 
     
+
+    def kmeans(self,**kwargs) -> Response:
+        return self.session.post(
+            "http://{}:{}/clustering/kmeans".format(self.workerId,self.port),
+             headers = kwargs,
+            #  timeout = timeout
+        )
 
     def DBSkMeans(self,**kwargs):
         return Response()
