@@ -2,10 +2,12 @@ import sys
 import logging
 
 def create_logger(**kwargs):
-    name          = kwargs.get("name","default")
-    LOG_PATH      = kwargs.get("LOG_PATH")
-    LOG_FILENAME  = kwargs.get("LOG_FILENAME")
-    add_error_log = kwargs.get("add_error_log",True)
+    name                   = kwargs.get("name","default")
+    LOG_PATH               = kwargs.get("LOG_PATH")
+    LOG_FILENAME           = kwargs.get("LOG_FILENAME")
+    add_error_log          = kwargs.get("add_error_log",True)
+    console_handler_filter = kwargs.get("console_handler_filter", lambda record: record.levelno == logging.DEBUG)
+    file_handler_filter    = kwargs.get("file_handler_filter", lambda record: record.levelno == logging.INFO)
     # 
     FORMAT      = '%(asctime)s,%(msecs)s,%(levelname)s,%(threadName)s,%(message)s'
     formatter   = logging.Formatter(FORMAT,"%Y-%m-%d,%H:%M:%S")
@@ -18,12 +20,12 @@ def create_logger(**kwargs):
     consolehanlder =logging.StreamHandler(sys.stdout)
     consolehanlder.setFormatter(formatter)
     consolehanlder.setLevel(logging.DEBUG)
-    consolehanlder.addFilter(lambda record: record.levelno == logging.DEBUG)
+    consolehanlder.addFilter(console_handler_filter)
     # 
     filehandler = logging.FileHandler(filename= filename)
     filehandler.setFormatter(formatter)
     filehandler.setLevel(logging.INFO)
-    filehandler.addFilter(lambda record: record.levelno == logging.INFO)
+    filehandler.addFilter(file_handler_filter)
     # 
     if(add_error_log):
         errorFilehandler = logging.FileHandler(filename=errorFilename)
