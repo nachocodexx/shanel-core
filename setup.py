@@ -14,7 +14,9 @@ setup(
         "security.cryptosystem",
         "interfaces",
         "validationindex",
-        "clustering.secure"
+        "clustering.secure",
+        "storage",
+        "storage.doa"
     ],
     # Needed for dependencies
     install_requires=['numpy','sklearn'],

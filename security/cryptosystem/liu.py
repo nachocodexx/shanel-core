@@ -106,6 +106,7 @@ class Liu(object):
 		end_time         = time()
 		encryption_time  = end_time-start_time
 		return EncryptMatrixStats(matrix = M_, encryption_time = encryption_time )
+		
 		# print("VECTORIZE_TIME {}".format(vt))
 	def curryingEncryptScalar(self,sk,m): 
 		def __inner(v):
