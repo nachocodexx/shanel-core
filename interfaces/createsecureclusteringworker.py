@@ -1,8 +1,6 @@
 import json
 
 """
-Description:
-    It is a DTO. Encapsulates features of the worker and manager objects.
 Notes:
     DTO (Data Transfer Object): Set of attributes that can be sent or retrieved from the server in a single invocation
 """
@@ -28,8 +26,8 @@ class CreateSecureClusteringWorker(object):
         self.envs      = {**default_envs,**_envs}
         self.labels    = kws.get("labels",{})
         self.volumes   = kws.get("volumes",{
-            "/test/logs" : "/logs",
-            "/test/sink/"+self.nodeId: "/sink"
+            kws.get("HOST_LOG_PATH","/log") : "/logs",
+            kws.get("HOST_SINK_PATH","/test/sink")+self.nodeId: "/sink"
         })
         self.resources = kws.get("resources",{})
         
