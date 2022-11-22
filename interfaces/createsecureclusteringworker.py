@@ -30,7 +30,12 @@ class CreateSecureClusteringWorker(object):
             kws.get("HOST_LOG_PATH","/log") : "/logs",
             kws.get("HOST_SINK_PATH","/test/sink/")+self.nodeId: "/sink"
         })
-        self.resources = kws.get("resources",{})
+        self.resources = kws.get("resources",{
+            "cpuCount":1,
+            "cpuPeriod":0,
+            "cpuQuota":0,
+            "memory":1000000000
+        })
         
     def serialize(self):
         return json.dumps(self.__dict__)
