@@ -67,9 +67,18 @@ class Liu(object):
 	description: split a plaintext matrix into vectors
     """
 	def encryptMatrix(self,**kwargs):
+		start_time       = time()
 		vss = kwargs.get("plaintext_matrix",[])
 		new_kwargs = lambda vs: {**{"plaintext_vector":vs},**kwargs}
-		return [ self.encryptVector(**new_kwargs(vs)) for vs in vss ]
+		# N*a*m
+		# M_               = np.asarray(list(map(lambda x: list(x),fx(plaintext_matrix.flatten()).tolist()))).flatten().reshape(plaintext_matrix.shape[0],plaintext_matrix.shape[1],m)
+		# print(M_.shape)
+		end_time         = time()
+		M_ = np.array([ self.encryptVector(**new_kwargs(vs)) for vs in vss ])
+		encryption_time  = end_time-start_time
+		return EncryptMatrixStats(matrix = M_, encryption_time = encryption_time )
+
+		
 
 
 	"""
@@ -92,6 +101,7 @@ class Liu(object):
 		1. E1: sk[0][0] * sk[0][2] * v + sk[0][1] * self.R[m-1] + sk[0][0] * (self.R[0] - self.R[m-2])
 		2. Ei: sk[i][0] * sk[i][2] * v + sk[i][1] * self.R[m-1] + sk[i][0] * (self.R[i] - self.R[i-1])
 		3. Em: sk[m-1][0] + sk[m-1][1] + sk[m-1][2]) * self.R[m-1]
+		<ERROR> FIX IT LATER 
     """
 	def vectorizeEncryptMatrix(self,**kwargs):
 		plaintext_matrix = kwargs.get("plaintext_matrix")

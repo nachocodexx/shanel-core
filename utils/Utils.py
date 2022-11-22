@@ -10,6 +10,14 @@ class Utils(object):
     def __init__(self):
         pass
 
+    def generate_centroids(**kwargs):
+        k            = kwargs.get("k",3)
+        plain_matrix = kwargs.get("plain_matrix")
+        centroids    = []
+        for x in range(k):
+            centroids.append(plain_matrix[x])
+        columns = Utils.getShapeOfMatrix(plain_matrix)[1]
+        return np.array(centroids).reshape(k,columns)
     def fillLabelVector(**kwargs):
         label_vector = kwargs.get("label_vector",[])
         k = kwargs.get("k",2)

@@ -2,6 +2,13 @@ import requests
 from interfaces.createsecureclusteringworker import CreateSecureClusteringWorker
 
 
+# Helper class
+class DumbReplicator(object):
+    def __init__(self,**kwargs):
+        pass
+    def deploy(self,**kwargs):
+        return "FAKE_NODE_DEPLOYMENT"
+
 
 class SecureReplicator(object):
 

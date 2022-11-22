@@ -1,5 +1,17 @@
 import requests
+import json
+# Helper class
+class Text(object):
+    def __init__(self,**kwargs):
+        workerId = kwargs.get("workerId")
+        self.text = json.dumps({"workerId":workerId})
 
+class DumbSecureClusteringManager(object):
+    def __init__(self):
+        pass
+        # self.workerId = kwargs.get("workerId")
+    def sendSecureClusteringRequest(self,**kwargs):
+        return Text(workerId = kwargs.get("workerId","localhost"))
 """
 Description: 
     Class that allows the connection between the client and the manager

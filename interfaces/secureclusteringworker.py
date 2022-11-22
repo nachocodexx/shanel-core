@@ -1,5 +1,32 @@
 from requests import Session,Response
 
+class DumbClusteringWorker(object):
+    def __init__(self,**kwargs):
+        self.workerId  = kwargs.get("workerId")
+        self.port      = kwargs.get("port",9000)
+        # self.session   = kwargs.get("session")
+        # self.algorithm = kwargs.get("algorithm","SK_MEANS")
+
+    def kmeans(self,**kwargs) -> Response:
+        return self.session.post(
+            "http://{}:{}/clustering/kmeans".format(self.workerId,self.port),
+             headers = kwargs,
+            #  timeout = timeout
+        )
+
+
+    def DBSkMeans(self,**kwargs):
+        return Response()
+
+    # { a: 1 } + {b: 2} = {a:1,b:2}
+    # { **{a:1},**{b:2,c:3} } = {a:1,b:2,c:3}
+    def SKMeans_1(self,**kwargs) -> Response:
+        return Response()
+
+    def SKMeans_2(self,**kwargs) -> Response:
+        return Response()
+
+
 
 class SecureClusteringWorker(object):
     def __init__(self,**kwargs):

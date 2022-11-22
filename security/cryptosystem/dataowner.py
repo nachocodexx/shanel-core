@@ -119,12 +119,19 @@ class DataOwner(object):
 		a                 = kwargs.get("attributes",  Dshape[1] )
 		# 
 		udm_init          = kwargs.get("udm_init","zeros")
-		encryption_result = self.liu_scheme.vectorizeEncryptMatrix(
+		encryption_result = self.liu_scheme.encryptMatrix(
 			plaintext_matrix = D,
 			secret_key       = self.sk,
 			m                = self.m
 		)
+		# self.liu_scheme.vectorizeEncryptMatrix(
+		# 	plaintext_matrix = D
+		# 	secret_key       = self.sk,
+		# 	m                = self.m
+		# )
+		
 		start_time_udm    = time()
+		
 		U                 = np.zeros((N,N,a)).tolist() if(udm_init == "zeros" )  else Utils.create_UDM(plaintext_matrix = D)
 		udm_time          = time()  - start_time_udm
 		# ________________________________________________________________________________________________________________
