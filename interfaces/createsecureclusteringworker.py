@@ -24,10 +24,11 @@ class CreateSecureClusteringWorker(object):
         
         _envs          = kws.get("envs",{})
         self.envs      = {**default_envs,**_envs}
+        print("ENVS {}".format(self.envs))
         self.labels    = kws.get("labels",{})
         self.volumes   = kws.get("volumes",{
             kws.get("HOST_LOG_PATH","/log") : "/logs",
-            kws.get("HOST_SINK_PATH","/test/sink")+self.nodeId: "/sink"
+            kws.get("HOST_SINK_PATH","/test/sink/")+self.nodeId: "/sink"
         })
         self.resources = kws.get("resources",{})
         
