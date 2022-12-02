@@ -83,13 +83,13 @@ class DataOwner(object):
 		Dshape = Utils.getShapeOfMatrix(D)
 		a = kwargs.get("attributes",  Dshape[1] )
 		# encryption_result: ciphertext_matrix, U: UDM  
-		start_time_d1 = time()
+		# start_time_d1 = time()
 		encryption_result = self.liu_scheme.encryptMatrix(
 			plaintext_matrix = D,
 			secret_key       = self.sk,
 			m                = self.m
 		)
-		d1_time = time() - start_time_d1
+		# d1_time = time() - start_time_d1
 		
 		start_time_udm = time()
 		U  = Utils.create_UDM(plaintext_matrix = D)
@@ -97,8 +97,8 @@ class DataOwner(object):
 		return OutsourceDataStats(
 			UDM = U,
 			udm_time = udm_time, 
-			encrypted_matrix = encryption_result,
-			encrypted_matrix_time = d1_time
+			encrypted_matrix = encryption_result.matrix,
+			encrypted_matrix_time = encryption_result.encryption_time
 		)
 
 	"""
