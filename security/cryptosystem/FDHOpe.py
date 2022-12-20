@@ -1,6 +1,5 @@
 import random
 import numpy as np
-#FDH_OPE
 
 """
 Description: Frequency Concealment and Distribution OPE (FDH-OPE) scheme, used to facilitate the required UDM operation.
@@ -14,10 +13,10 @@ class Fdhope(object):
         D                   = kwargs.get("dataset")
         minVal              = kwargs.get("minValue", 0)
         n_range             = kwargs.get("n_range", 4)
-        proportion          = kwargs.get("proportion",3)
+        density          = kwargs.get("density",3)
         maxVal_messagespace = Fdhope.findMax(D)
         maxVal_messagespace = round(maxVal_messagespace) + 1 #+1 to be able to place the last element in the range
-        maxVal_cipherspace  = maxVal_messagespace * proportion 
+        maxVal_cipherspace  = maxVal_messagespace * density 
 
         messagespace = Fdhope.generate_range_values(
             minValue = minVal, 
@@ -36,21 +35,32 @@ class Fdhope(object):
     Description: FDH-OPE encryption algorithm
     """
     def encrypt(**kwargs):
-        v            = kwargs.get("plaintext") 
+        plaintext    = kwargs.get("plaintext") 
         sens         = kwargs.get("sens",0.01)
         messagespace = kwargs.get("messagespace")
         cipherspace  = kwargs.get("cipherspace")
-        i            = Fdhope.intervalID(v)
-        li, hi         = Fdhope.boundary(i)
-        lip, hip       = Fdhope.boundaryP(i)
-        n_range      = kwargs.get("n_range")
-        scale = (lip - hip) / (li - hi)
-        tem = sens * scale
-        delta = random.uniform(0,tem)
-        vi = lip + scale * (abs(v) - li) + delta
-        if (v < 0):
-            vi = vi * (-1)
-        return vi
+
+        id = Fdhope.getIntervalID(
+            plaintext    = plaintext, 
+            messagespace = messagespace
+        )
+
+        messagespace_min, messagespace_max = Fdhope.getBoundary(
+            id    = id, 
+            space = messagespace
+        )
+        
+        cipherspace_min, cipherspace_max = Fdhope.getBoundary(
+            id    = id, 
+            space = cipherspace
+        )
+
+        scale      = (cipherspace_min - cipherspace_max) / (messagespace_min - messagespace_max)
+        delta      = random.uniform(0,sens * scale)
+        ciphertext = cipherspace_min + scale * (abs(plaintext) - messagespace_min) + delta
+        if (plaintext < 0):
+            ciphertext = ciphertext * (-1)
+        return ciphertext
 
     def calculate_dens(**kwargs):
         pass
@@ -67,6 +77,7 @@ class Fdhope(object):
             range_ids.append(id)
         return range_ids
 
+
     """
     Description: Generates the values of each interval depending on the defined minimum and maximum value
     """
@@ -81,8 +92,9 @@ class Fdhope(object):
         for index,range_id in enumerate(range_ids): 
             minVal = index * r
             maxVal = maxValue+1 if (index == n_range-1) else minVal + r
-            rangos[ range_id ] = (minVal, maxVal)
+            rangos[range_id] = (minVal, maxVal)  #Diccionario Rangos, key = range_id, value = tuple
         return rangos
+
 
     """
     Description: It allows to find the maximum value of the dataset 
@@ -90,20 +102,29 @@ class Fdhope(object):
     def findMax(D):  #Obtiene el valor maximo en D para definir los intervalos
         return np.max(np.abs(np.array(D).flatten()))
 
-    def intervalID(**kwargs):
-        # |v|
-        pass
-        #return i
 
-    def boundary(**kwargs):
-        #i
-        pass
-        #return li, hi
+    """
+    Description: Returns the ID of the range in which the element is found
+    """
+    def getIntervalID(**kwargs):
+        plaintext    = abs(kwargs.get("plaintext",0))
+        messagespace = kwargs.get("messagespace")
+        for key, value in messagespace.items():
+            if (plaintext >= value[0] and plaintext < value[1]):
+                return key
 
-    def boundaryP(**kwargs):
-        #i
-        pass
-        #return lip, hip
+
+    """
+    Description: Given "range_id" get min and max of message space
+    """
+    def getBoundary(**kwargs):
+        id    = kwargs.get("id")
+        space = kwargs.get("space")
+        value = space.get(id)
+        li    = value[0]
+        hi    = value[1]
+        return li, hi
+        
 
 if __name__ == "__main__":
     plaintext_matrix = [
@@ -113,4 +134,16 @@ if __name__ == "__main__":
         [62.15,32.29],
         [59.47,36.04]
     ]
-    Fdhope.keygen(dataset = plaintext_matrix)
+
+    messagespace, cipherspace = Fdhope.keygen(
+        dataset = plaintext_matrix, 
+        n_range = 4, 
+        proportion = 3
+    )
+    ciphertext = Fdhope.encrypt(
+        plaintext    = 34.44,
+        sens         = 0.01,
+        messagespace = messagespace,
+        cipherspace  = cipherspace
+        )
+    print(ciphertext)
