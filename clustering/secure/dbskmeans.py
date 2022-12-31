@@ -2,7 +2,7 @@ import numpy as np
 import copy
 from utils.Utils import Utils
 from security.cryptosystem.liu import Liu
-from security.cryptosystem.FDHOpe import FDHOpe
+from security.cryptosystem.FDHOpe import Fdhope
 
 """
 Description:
@@ -17,7 +17,7 @@ Attributes:
 Variables:
 	C: Set of clusters
 """
-class DBSKMeans(object):
+class Dbskmeans(object):
 
 	def __init__(self,**kwargs):
 		self.D1               = kwargs.get("ciphertext_matrix")
@@ -32,16 +32,17 @@ class DBSKMeans(object):
 		self.sens             = kwargs.get("sens",0.01)
 		self.max_iterations   = kwargs.get("max_iterations",100)
 		
-		C_empty        = Utils.empty_cluster(k = self.k)
+		C_empty = Utils.empty_cluster(k = self.k)
 
-		self.C       = Utils.appends(
+		self.C      = Utils.appends(
 			source  = self.D1, 
 			dest    = C_empty, 
 			dest_fx = Utils.dest_fx_matrix,
 			limit   = self.k 
 		) # Conjunto de los primeros k registros en D
 		
-		self.Cent_i  = Utils.appends(
+		
+		self.Cent_i = Utils.appends(
 			source  = self.D1,
 			dest    = [],
 			dest_fx = Utils.dest_fx_vector,
@@ -49,9 +50,9 @@ class DBSKMeans(object):
 		) 
 
 		__C, label_vector = Utils.populateClusters(
-            record_id = self.k,
-            UDM       = self.U,
-            clusters  = self.C,
+            record_id         = self.k,
+            UDM               = self.U,
+            clusters          = self.C,
             ciphertext_matrix = self.D1,
 		)
 		self.C = __C
@@ -65,22 +66,26 @@ class DBSKMeans(object):
 		)
 		
 		U, terminate = self.updateEncryptedUDM(
-			UDM = self.U,
-			previuous_centroids=self.Cent_i, 
-			current_centroids=self.Cent_j, 
+			UDM                 = self.U,
+			previuous_centroids = self.Cent_i, 
+			current_centroids   = self.Cent_j, 
+		)
+		
+		self.label_vector = Utils.fillLabelVector(
+			label_vector = label_vector,
+			k            = self.k
 		)
 		
 		self.U = U
 
 		self.run(
-		 	ciphertext_matrix = self.D1,
-		 	UDM = self.U,
+		 	ciphertext_matrix   = self.D1,
+		 	UDM                 = self.U,
 		 	previuous_centroids = self.Cent_j,
-			terminate = terminate
+			terminate           = terminate
 		)
 
-	"""
-	"""
+	
 	def run(self,**kwargs):
 		self.iteration_counter = 0
 		self.label_vector      = []
@@ -144,7 +149,7 @@ class DBSKMeans(object):
 		
 		for i in range(len(Cent_i)):
 			for j in range(len(Cent_i[i])):
-				S1[i][j] = Liu.subtract(Cent_i[i][j], Cent_j[i][j]) #Resta con el esquema de Liu	
+				S1[i][j] = Liu.subtract(ciphertext_1 = Cent_i[i][j], ciphertext_2 = Cent_j[i][j]) #Resta con el esquema de Liu	
 				
 
 		S = self.dataowner.userActions(
@@ -154,16 +159,14 @@ class DBSKMeans(object):
 		
 		for x in range(len(S)):
 			for y in range(len(S[x])):
-				S1[x][y] = FDHOpe.encrypt(
-					v                = S[x][y], 
-					sens             = self.sens, 
-					messageIntervals = self.messageIntervals, 
-					cypherIntervals  = self.cypherIntervals
+				S1[x][y] = Fdhope.encrypt(
+					plaintext    = S[x][y], 
+					sens         = self.sens, 
+					messagespace = self.messageIntervals, 
+					cipherspace  = self.cypherIntervals
 				) #Cifrado de S
-		#print(S1)
 
 		EU1 = []
-		# for x in range(len(U)): ##Construcción de U1 vacia
 		for x in range(len(U)): ##Construcción de U1 vacia
 			EU1.append([])
 			for y in range(self.k):
@@ -174,20 +177,6 @@ class DBSKMeans(object):
 						EU1[x][y][z] = ((-U[y][x][z] + S[y][z])) #Suma de cada elemento de U con S
 					else:
 						EU1[x][y][z] = (U[x][y][z] + S[y][z]) #Suma de cada elemento de U con S
-		# ________________________________________________________________
-		# temp = True
-		# for t in S:
-		# 	t = [0 if element==0.0 else element for element in t] #Reemplazar 0.0 por 0
-		# 	temp2 = True
-		# 	for u in t:
-		# 		if u != 0:
-		# 			temp2 = False
-		# 	if not temp2:
-		# 		temp = False
-		# _______________________________________________________________
-		# if temp: #Se detiene cuando la matriz de desplazamiento S es 0
-		# 	terminate = True
-		# else:
-		# 	terminate = False
+		
 		terminate = Utils.verifyZero(S)
 		return EU1, terminate #Triangulo inferior de U y matriz de desplazamiento            

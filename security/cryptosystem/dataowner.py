@@ -1,6 +1,6 @@
 import numpy as np
 from utils.Utils import Utils
-from .FDHOpe import FDHOpe
+from .FDHOpe import Fdhope
 from time import time
 
 
@@ -10,9 +10,9 @@ class OutsourceDataStats(object):
 		self.UDM                   = kwargs.get("UDM",np.array([]))
 		self.encrypted_matrix      = kwargs.get("encrypted_matrix",np.array([]))
 		self.encrypted_matrix_time = kwargs.get("encrypted_matrix_time",np.array([]))
+		self.messageIntervals      = kwargs.get("messageIntervals",{})
+		self.cypherIntervals       = kwargs.get("cypherIntervals",{})
 	
-
-
 
 """
 Description:
@@ -28,7 +28,6 @@ Attributes:
 		represents the Frequency and Distribution Hiding OPE (FDH-OPE) 
 		scheme to facilitate operations for UDM.
 """
-
 class DataOwner(object):
 
 	def __init__(self,**kwargs):
@@ -38,7 +37,7 @@ class DataOwner(object):
 		self.m          = m 
 		self.liu_scheme = liu_scheme
 		self.sk         = self.liu_scheme.secretKey( m = self.m )
-		self.messageIntervals, self.cypherIntervals = [], []
+		self.messageIntervals, self.cypherIntervals = {}, {}
 
 	def setM(self,m):
 		self.m = m
@@ -82,14 +81,11 @@ class DataOwner(object):
 		D      = kwargs.get("plaintext_matrix",[[]])
 		Dshape = Utils.getShapeOfMatrix(D)
 		a = kwargs.get("attributes",  Dshape[1] )
-		# encryption_result: ciphertext_matrix, U: UDM  
-		# start_time_d1 = time()
 		encryption_result = self.liu_scheme.encryptMatrix(
 			plaintext_matrix = D,
 			secret_key       = self.sk,
 			m                = self.m
 		)
-		# d1_time = time() - start_time_d1
 		
 		start_time_udm = time()
 		U  = Utils.create_UDM(plaintext_matrix = D)
@@ -124,14 +120,8 @@ class DataOwner(object):
 			secret_key       = self.sk,
 			m                = self.m
 		)
-		# self.liu_scheme.vectorizeEncryptMatrix(
-		# 	plaintext_matrix = D
-		# 	secret_key       = self.sk,
-		# 	m                = self.m
-		# )
-		
+
 		start_time_udm    = time()
-		
 		U                 = np.zeros((N,N,a)).tolist() if(udm_init == "zeros" )  else Utils.create_UDM(plaintext_matrix = D)
 		udm_time          = time()  - start_time_udm
 		# ________________________________________________________________________________________________________________
@@ -154,7 +144,7 @@ class DataOwner(object):
 	def outsourceDataDBS(self, **kwargs): 
 		D      = kwargs.get("plaintext_matrix",[[]])
 		Dshape = Utils.getShapeOfMatrix(D)
-		a = kwargs.get("attributes",  Dshape[1] )
+		a      = kwargs.get("attributes",  Dshape[1] )
 
 		encryption_result = self.liu_scheme.encryptMatrix(
 			plaintext_matrix = D,
@@ -164,19 +154,30 @@ class DataOwner(object):
 
 		EU  = Utils.calculateUDM(plaintext_matrix = D)
 
-		self.messageIntervals, self.cypherIntervals = FDHOpe.keyGen(dataset = D) #Generacion de los rangos de cada espacio
-
+		self.messageIntervals, self.cypherIntervals = Fdhope.keygen( #Generacion de los rangos de cada espacio
+			dataset = D
+			)
+		start_time_udm    = time()
 		for x in range(len(EU)): #Cifrado de UDM 
 			for y in range(x):
 				for z in range(len(EU[x][y])):
-					EU[x][y][z] = FDHOpe.encrypt(
-						v                = EU[x][y][z], 
-						sens             = self.sens, 
-						messageIntervals = self.messageIntervals, 
-						cypherIntervals  = self.cypherIntervals
+					EU[x][y][z] = Fdhope.encrypt(
+						plaintext    = EU[x][y][z], 
+						sens         = self.sens, 
+						messagespace = self.messageIntervals, 
+						cipherspace  = self.cypherIntervals
 					) #Función de cifrado de la matriz
-
-		return encryption_result, EU, self.messageIntervals, self.cypherIntervals
+		udm_time          = time()  - start_time_udm
+		
+		return OutsourceDataStats(
+			UDM                   = EU,
+			udm_time              = udm_time, 
+			encrypted_matrix      = encryption_result.matrix,
+			encrypted_matrix_time = encryption_result.encryption_time,
+			messageIntervals      = self.messageIntervals,
+			cypherIntervals       = self.cypherIntervals
+			)
+		#return encryption_result, EU, self.messageIntervals, self.cypherIntervals
 
 
 	"""

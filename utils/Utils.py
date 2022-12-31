@@ -126,20 +126,6 @@ class Utils(object):
         xs = pd.DataFrame(x)
         print(xs)
 
-    # def initZeros(**kwargs):
-    #     k = kwargs.get("k")
-    #     a = kwargs.get("a")
-    #     m = kwargs.get("m")
-    #     Cent = []
-    #     for x in range(k): 
-    #         Cent.append([])
-    #         for y in range(a): 
-    #             Cent[x].append([])
-    #             #Inicializar cent (cifrados) en 0
-    #             for z in range(m): 
-    #                 Cent[x][y].append(0)
-    #     return Cent
-
     """
 	description: check that the shift matrix (S) is 0
 	attributes:
@@ -147,16 +133,7 @@ class Utils(object):
 	"""
     def verifyZero(S) -> bool:
         return np.all( np.array(S) ==0 )
-		# temp = True
-		# for t in S:
-		# 	t = [0 if element==0.0 else element for element in t] #Reemplazar 0.0 por 0
-		# 	temp2 = True
-		# 	for u in t:
-		# 		if u != 0:
-		# 			temp2 = False
-		# 	if not temp2:
-		# 		temp = False
-		# return temp
+
     """
     description: Generates a new set of centroids
 	attributes:
@@ -195,9 +172,6 @@ class Utils(object):
                         v1 = 1/cjLen
                         E1 = average[q]
                         cent[j][q] = Liu.multiply_c(scalar = v1, ciphertext_1 = E1)
-            #  ______________________________________________________
-            #print(cent)
-            #print("_"*100)
             return cent
 
         except Exception as e:
@@ -256,14 +230,6 @@ class Utils(object):
         except Exception as e:
             print(e)
             raise e
-            # for z in range(a): #desde 0 hasta el total de atributos
-                # sim = sim + abs(U[y][x][z])
-
-            # for z in range(a): #desde 0 hasta el total de atributos
-                # sim = sim + abs(U[y][x][z])
-            #     else:
-            #         for z in range(a): #desde 0 hasta el total de atributos
-            #             sim = sim + abs(U[x][y][z]) #Calcula la distancia entre rx y ry
 
 
     def dest_fx_vector(xs,i,x):
@@ -311,7 +277,6 @@ class Utils(object):
         try:
             D      = kwargs.get("plaintext_matrix")
             DShape = Utils.getShapeOfMatrix(D)
-            # DShape = (3,4)
             a = kwargs.get("attributes",DShape[1])
             U = []
             # fx = self.euclideanDistance   
@@ -343,9 +308,9 @@ class Utils(object):
     def calculateUDM(**kwargs): #Calculo de la matriz UDM
         D      = kwargs.get("plaintext_matrix")
         DShape = Utils.getShapeOfMatrix(D)
-        a = kwargs.get("attributes",DShape[1]) 
-        EU = []
-        EU  = Utils.create_UDM(plaintext_matrix = D)
+        a      = kwargs.get("attributes",DShape[1]) 
+        EU     = []
+        EU     = Utils.create_UDM(plaintext_matrix = D)
         for x in range(len(D)): #Llenado de U con distancias entre los datos en plano
             EUy = []
             for y in range(x+1):

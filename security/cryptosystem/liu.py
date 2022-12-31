@@ -27,7 +27,6 @@ Description:
 Attributes:
     _round: Flag to know if decryption needs to be rounded based on plaintext type
 """
-
 class Liu(object):
 	def __init__(self,**kwargs):
 		self.round = kwargs.get("round",False)
@@ -67,13 +66,10 @@ class Liu(object):
 	description: split a plaintext matrix into vectors
     """
 	def encryptMatrix(self,**kwargs):
-		start_time       = time()
-		vss = kwargs.get("plaintext_matrix",[])
+		start_time = time()
+		vss        = kwargs.get("plaintext_matrix",[])
 		new_kwargs = lambda vs: {**{"plaintext_vector":vs},**kwargs}
-		# N*a*m
-		# M_               = np.asarray(list(map(lambda x: list(x),fx(plaintext_matrix.flatten()).tolist()))).flatten().reshape(plaintext_matrix.shape[0],plaintext_matrix.shape[1],m)
-		# print(M_.shape)
-		end_time         = time()
+		end_time   = time()
 		M_ = np.array([ self.encryptVector(**new_kwargs(vs)) for vs in vss ])
 		encryption_time  = end_time-start_time
 		return EncryptMatrixStats(matrix = M_, encryption_time = encryption_time )
