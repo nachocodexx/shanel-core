@@ -12,6 +12,7 @@ class OutsourceDataStats(object):
 		self.encrypted_matrix_time = kwargs.get("encrypted_matrix_time",np.array([]))
 		self.messageIntervals      = kwargs.get("messageIntervals",{})
 		self.cypherIntervals       = kwargs.get("cypherIntervals",{})
+		self.encrypted_threshold   = kwargs.get("encrypted_threshold",0)
 	
 
 """
@@ -145,6 +146,7 @@ class DataOwner(object):
 		D      = kwargs.get("plaintext_matrix",[[]])
 		Dshape = Utils.getShapeOfMatrix(D)
 		a      = kwargs.get("attributes",  Dshape[1] )
+		#algorithm = kwargs.get("algorithm", 1)
 
 		encryption_result = self.liu_scheme.encryptMatrix(
 			plaintext_matrix = D,
@@ -155,7 +157,7 @@ class DataOwner(object):
 		EU  = Utils.calculateUDM(plaintext_matrix = D)
 
 		self.messageIntervals, self.cypherIntervals = Fdhope.keygen( #Generacion de los rangos de cada espacio
-			dataset = D
+			dataset = EU
 			)
 		start_time_udm    = time()
 		for x in range(len(EU)): #Cifrado de UDM 
@@ -176,6 +178,62 @@ class DataOwner(object):
 			encrypted_matrix_time = encryption_result.encryption_time,
 			messageIntervals      = self.messageIntervals,
 			cypherIntervals       = self.cypherIntervals
+			)
+		#return encryption_result, EU, self.messageIntervals, self.cypherIntervals
+
+	"""
+	description: Data preparation.
+	attributes: 
+		rawD: original dataset
+		D: numeric dataset
+		a: number of attributes of D
+		m: number of attributes of SK
+	"""
+	def outsourceDataDbsnnc(self, **kwargs): 
+		D         = kwargs.get("plaintext_matrix",[[]])
+		Dshape    = Utils.getShapeOfMatrix(D)
+		a         = kwargs.get("attributes",  Dshape[1] )
+		threshold = kwargs.get("threshold",0.01)
+
+		encryption_result = self.liu_scheme.encryptMatrix(
+			plaintext_matrix = D,
+			secret_key       = self.sk,
+			m                = self.m
+		)
+
+		EU  = Utils.calculateDM(plaintext_matrix = D)
+		
+		self.messageIntervals, self.cypherIntervals = Fdhope.keygen( #Generacion de los rangos de cada espacio
+			dataset   = EU
+			)
+
+		start_time_udm    = time()
+
+		for x in range(len(EU)): #Cifrado de UDM 
+			for y in range(x):
+				EU[x][y] = Fdhope.encrypt(
+					plaintext    = EU[x][y], 
+					messagespace = self.messageIntervals, 
+					cipherspace  = self.cypherIntervals
+				)
+				EU[y][x] = EU[x][y]
+				 #Función de cifrado de la matriz
+		udm_time          = time()  - start_time_udm 
+
+		encrypted_threshold = Fdhope.encrypt(
+			plaintext    = threshold,
+			messagespace = self.messageIntervals, 
+			cipherspace  = self.cypherIntervals
+		)
+		
+		return OutsourceDataStats(
+			UDM                   = EU,
+			udm_time              = udm_time, 
+			encrypted_matrix      = encryption_result.matrix,
+			encrypted_matrix_time = encryption_result.encryption_time,
+			messageIntervals      = self.messageIntervals,
+			cypherIntervals       = self.cypherIntervals,
+			encrypted_threshold   = encrypted_threshold
 			)
 		#return encryption_result, EU, self.messageIntervals, self.cypherIntervals
 

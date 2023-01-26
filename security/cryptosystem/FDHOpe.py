@@ -21,6 +21,7 @@ class Fdhope(object):
         n_range              = random.randint(2,max_range) #Number of ranges
         messagespace,new_density = {}, {}
 
+
         _messagespace = Fdhope.generate_range_values( #Generate possible message space
             minValue = minVal, 
             maxValue = maxVal_messagespace, 
@@ -46,7 +47,7 @@ class Fdhope(object):
             current_min,current_max = rango
             if(index==0 or current_min <= global_max):
                 global_max = current_max
-                messagespace[new_key]   =  (current_min,current_max)#
+                messagespace[new_key] = (current_min,current_max)#
             else:
                 if(current_min > global_max):
                     messagespace[new_key] = (global_max,current_max)#
@@ -108,10 +109,22 @@ class Fdhope(object):
         messagespace       = kwargs.get("messagespace")
         dens               = []
 
-        for plaintext_vector in D:
-            for plaintext in plaintext_vector:
-                key = Fdhope.getIntervalID(plaintext = plaintext, messagespace = messagespace)
-                dens.append(key)
+        for plaintext_matrix in D:
+            for plaintext_vector in plaintext_matrix:
+                if (type(plaintext_vector) == list):
+                    for plaintext in plaintext_vector:
+                        key = Fdhope.getIntervalID(
+                            plaintext = plaintext, 
+                            messagespace = messagespace
+                            )
+                        dens.append(key)
+                else:
+                    key = Fdhope.getIntervalID(
+                        plaintext = plaintext_vector, 
+                        messagespace = messagespace
+                        )
+                    dens.append(key)
+
         conteo = Counter(dens) 
         return dict(conteo.items())
         

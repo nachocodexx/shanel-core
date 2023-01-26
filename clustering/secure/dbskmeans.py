@@ -3,10 +3,11 @@ import copy
 from utils.Utils import Utils
 from security.cryptosystem.liu import Liu
 from security.cryptosystem.FDHOpe import Fdhope
+from logger.Dumblogger import DumbLogger
 
 """
 Description:
-A  class to represent a secure K-means algorithm
+A  class to represent a double bind secure K-means algorithm
 _______________
 Attributes: 
 	D1: Encrypted dataset 
@@ -113,9 +114,6 @@ class Dbskmeans(object):
 				m          = self.m,
 				Liu        = Liu
 			)
-
-			#print(self.Cent_j)
-			#print("_"*100)
 
 			U, terminate = self.updateEncryptedUDM(
 				UDM                 = self.U,

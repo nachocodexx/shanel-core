@@ -6,10 +6,12 @@ import requests
 from uuid import uuid4
 # ___________________________________________________
 
+
 class Utils(object):
     def __init__(self):
         pass
-
+    
+    
     def generate_centroids(**kwargs):
         k            = kwargs.get("k",3)
         plain_matrix = kwargs.get("plain_matrix")
@@ -247,13 +249,11 @@ class Utils(object):
          limit: Number of iteration to appending elementos from source to dest.
     """
     def appends(**kwargs):
-        # _
         xs      = kwargs.get("dest", [])
         dest_fx = kwargs.get("dest_fx",lambda x,i:x)
-        # _
-        ys  = kwargs.get("source",[])
-        
-        k   = kwargs.get("limit",0)
+        ys      = kwargs.get("source",[])
+        k       = kwargs.get("limit",0)
+
         for i in range(k):
             xs = dest_fx(xs,i,ys[i])
         return xs
@@ -297,7 +297,7 @@ class Utils(object):
 
     def empty_cluster(**kwargs):
         k = kwargs.get("k",3)
-        return [[] for i in range(k)]
+        return [[] for i in range(0,k)]
 
     """
     description: EUDM matrix calculation
@@ -311,10 +311,8 @@ class Utils(object):
         a      = kwargs.get("attributes",DShape[1]) 
         EU     = []
         EU     = Utils.create_UDM(plaintext_matrix = D)
-        for x in range(len(D)): #Llenado de U con distancias entre los datos en plano
-            EUy = []
+        for x in range(DShape[0]): #Llenado de U con distancias entre los datos en plano
             for y in range(x+1):
-                EUz = []
                 for z in range(a):
                     EU[x][y][z] = (D[x][z] - D[y][z]) #Calculo de distancias
         return EU
@@ -325,15 +323,38 @@ class Utils(object):
         D: numeric dataset
         a: number of attributes of D
     """
-    def calculateDM(self, D,a): #Calculo de la matriz DM
-        ED = []
-        for x in range(len(D)): ##Construcción de ED vacia (Solo el triangulo inferior)
-            ED.append([])
-            for y in range(x+1): #
-                ED[x].append([])
-        for x in range(len(D)): #Llenado de U con distancias entre los datos en plano
-            EDy = []	
-            for y in range(x+1):
+    def calculateDM(**kwargs): #Calculo de la matriz DM
+        D      = kwargs.get("plaintext_matrix")
+        DShape = Utils.getShapeOfMatrix(D)
+        a      = kwargs.get("attributes",DShape[1]) 
+        
+        ED     = []
+        for x in range(DShape[0]): 
+            ED.append([]) 
+            #for y in range(DShape[0]):
+             #   ED[x].append([])
+        
+        for x in range(DShape[0]): #Llenado de U con distancias entre los datos en plano	
+            for y in range(DShape[0]):
+                dist = 0
+                #print("_______")
                 for z in range(a):
-                    ED[x][y] = abs(D[x][z] - D[x][z]) #Calculo de distancias
+                    dist += abs(D[x][z] - D[y][z])
+                    #print("0", D[x][z], "1", D[y][z], "dist", dist)
+                    #print("dist",dist)
+                ED[x].append(dist)
+            #print(ED)
         return ED
+
+if __name__ == "__main__":
+    h = Utils.calculateDM(
+        plaintext_matrix = 
+        [ [0.73,8.84],  
+         [49.93,34.44],
+    [0.57,65.04],
+    [62.15,32.29],
+    [59.47,36.04]
+]
+    )
+    
+

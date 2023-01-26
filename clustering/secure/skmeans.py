@@ -2,17 +2,7 @@ import numpy as np
 import copy
 from utils.Utils import Utils
 from security.cryptosystem.liu import Liu
-
-class DumbLogger(object):
-	def debug(self,x):
-		return
-	
-	def info(self,x):
-		return
-	
-	def error(self,x):
-		return
-
+from logger.Dumblogger import DumbLogger
 
 """
 Description:
