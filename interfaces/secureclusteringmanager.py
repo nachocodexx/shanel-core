@@ -9,7 +9,7 @@ class Text(object):
 class DumbSecureClusteringManager(object):
     def __init__(self):
         pass
-        # self.workerId = kwargs.get("workerId")
+        
     def sendSecureClusteringRequest(self,**kwargs):
         return Text(workerId = kwargs.get("workerId","localhost"))
 """

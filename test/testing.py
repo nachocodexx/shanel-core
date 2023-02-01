@@ -39,8 +39,24 @@ plaintext_matrix = [
 
 
 class TestCore(unittest.TestCase):
-    
 
+    def test_outsourced(self):
+        dow0 = DataOwner(
+            m = m,
+            liu_scheme = liu
+        )
+        outsourced = dow0.outsourcedData(
+            plaintext_matrix = plaintext_matrix,
+            #algorithm = "SKMEANS",
+            algorithm = "DBSKMEANS",
+            #algorithm = "DBSNNC",
+            threshold = 1
+        )
+        #print("D1",outsourced.encrypted_matrix)
+        print("UDM",outsourced.UDM)
+        print("Threshold",outsourced.encrypted_threshold)
+
+    @unittest.skip("")
     def test_outsourcednnc(self):
         dow0 = DataOwner(
             m = m,

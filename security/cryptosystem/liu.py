@@ -296,10 +296,7 @@ class Liu(object):
 		E2 = kwargs.get("ciphertext_2")
 		return (np.array(E1) + np.array(E2)).tolist()
 
-	# self.E3 = []
-	# for i in range(m):
-	# 	self.E3.append(E1[i] + E2[i])
-	# return self.E3
+	
 	"""
 	description: Multiplication of two ciphertexts
 	attributes:

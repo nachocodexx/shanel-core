@@ -1,13 +1,13 @@
 import numpy as np
-import copy
+from time import time
 from utils.Utils import Utils
 from security.cryptosystem.liu import Liu
 from logger.Dumblogger import DumbLogger
+from interfaces.clustering_result import ClusteringResult
 
 """
 Description:
 A  class to represent a Double Blind Secure Nearest Neighbour Clustering (DBSNNC)
-_______________
 Attributes: 
 	D1: Encrypted dataset 
 	ED: Distance matrix
@@ -21,38 +21,53 @@ class Dbsnnc(object):
 		self.dataowner = kwargs.get("dataowner")
 
 	def run(**kwargs):
-		D         = kwargs.get("ciphertext_matrix")
-		ED        = kwargs.get("EDM")
-		threshold = kwargs.get("encrypted_threshold",2)
-		D         = D.tolist()
-		Dshape    = Utils.getShapeOfMatrix(D)
-		c_indexes = [[0]] #Indice del primer registro en D
-		for record_index in range(1,Dshape[0]): # Recorrer los registros en D
-			for cluster_index, index_cluster in enumerate(c_indexes): #Recorrer los indices de los clusters
-				record_distances = [] #Distancias de un registro con respecto a todos los elementos del cluster
-				for record_index_cluster in index_cluster: #Recorrer la lista de indices de clusters
-					edi = ED[record_index][record_index_cluster] #Ubicar el registro en ED con respecto al cluster
-					record_distances.append(edi) #Distancia de un registro con respecto al registro de un cluster
-				min_distance_index = np.argmin(record_distances) #Indice del registro con menor distancia respecto a los demas registros del cluster
-				min_distance = record_distances[min_distance_index] #Registro con la menor distancia
-				if (min_distance <= threshold): #Revisa si pertenece al cluster con respecto al umbral definido
-					c_indexes[cluster_index].append(record_index) #Agrega ese registro al cluster actual
-				else: #Si no pertenece al cluster
-					if(cluster_index < len(c_indexes)-1): #Revisa si existen mas clusters por revisar
-						continue #Si existen mas clusters se pasa al siguiente
-					else: #Si ya no hay mas clusters por revisar
-						c_indexes.append([record_index]) #Crea un nuevo cluster con el registro actual
-						break #Se sale del for
-		label_vector = Dbsnnc.get_labelvector(
+		startTime          = time()
+		D                  = kwargs.get("ciphertext_matrix")
+		ED                 = kwargs.get("EDM")
+		threshold          = kwargs.get("encrypted_threshold",2)
+		D                  = D.tolist()
+		Dshape             = Utils.getShapeOfMatrix(D)
+		start_service_time = time()
+		c_indexes          = [[0]] #index of the first record in D
+
+		for record_index in range(1,Dshape[0]): #iterate through the records in D
+			for cluster_index, index_cluster in enumerate(c_indexes): #iterate the indexes of the clusters
+				record_distances = [] #distances of a record with respect to all the elements of the cluster
+				for record_index_cluster in index_cluster: # iterate through the list of cluster indexes
+					edi = ED[record_index][record_index_cluster] #locate the record in ED with respect to the cluster
+					record_distances.append(edi) #distance of a record with respect to the record of a cluster
+				min_distance_index = np.argmin(record_distances) #index of the record with the smallest distance from the other records in the cluster
+				min_distance = record_distances[min_distance_index] #record with least distance
+				if (min_distance <= threshold): #check if it belongs to the cluster with respect to the defined threshold
+					c_indexes[cluster_index].append(record_index) #add the record to the current cluster
+				else: #if it doesn't belong to the cluster
+					if(cluster_index < len(c_indexes)-1): #check if there are more clusters to check
+						continue # if there are more clusters, go to the next one
+					else: #if there are no more clusters to check
+						c_indexes.append([record_index]) # create a new cluster with the current record
+						break #exits for
+		end_service_time = time()
+		label_vector = Dbsnnc.get_labelvector( #gets final label vector
 			c_indexes = c_indexes,
 			Dshape    = Dshape
 		)
-		return c_indexes, label_vector
+		service_time     = end_service_time - start_service_time
+		response_time    = time() - startTime
+		#return c_indexes, label_vector
+		return ClusteringResult(
+        	labels_vector = label_vector,
+        	response_time = response_time,
+        	service_time  = service_time
+   		)
 
+	"""
+	Description: It allows to generate label vector from the indexes in the cluster
+	"""
 	def get_labelvector(**kwargs):
 		c_indexes    = kwargs.get("c_indexes",[])
 		Dshape	     = kwargs.get("Dshape")
-		label_vector = [-1]*Dshape[0]
+		label_vector = [-1]*Dshape[0] #fill label vector with -1
+
 		for index,record_index in enumerate(c_indexes):
 			for index_r,record in enumerate(record_index):
 				label_vector[record] = index

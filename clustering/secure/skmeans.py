@@ -3,11 +3,11 @@ import copy
 from utils.Utils import Utils
 from security.cryptosystem.liu import Liu
 from logger.Dumblogger import DumbLogger
+from interfaces.clustering_result import ClusteringResult
 
 """
 Description:
 A  class to represent a secure K-means algorithm
-_______________
 Attributes: 
 	D1: Encrypted dataset 
 	U: Updated distance matrix
@@ -26,112 +26,98 @@ class SKMeans(object):
 		D1Shape             = Utils.getShapeOfMatrix(self.D1)
 		self.a              = kwargs.get("num_attributes",D1Shape[1])
 		self.m              = kwargs.get("m",3)
-		self.dataowner      = kwargs.get("dataowner")
-		self.max_iterations = kwargs.get("max_iterations",100)
-		# Only for DEBUGGING purposes. 
-		self.L              = kwargs.get("logger",DumbLogger())
+		self.dataowner      = kwargs.get("dataowner") 
+		self.max_iterations = kwargs.get("max_iterations",100) #maximum number of possible iterations until it stops
+		self.L              = kwargs.get("logger",DumbLogger()) #only for DEBUGGING purposes. 
 		
-		C_empty = Utils.empty_cluster(k = self.k)
-		
-		# Conjunto de los primeros k registros en D
-		self.C       = Utils.appends(
+		C_empty = Utils.empty_cluster(k = self.k) #set of size k empty
+		self.C  = Utils.appends( #add the first k records of D to c_empty
 			source  = self.D1, 
 			dest    = C_empty, 
 			dest_fx = Utils.dest_fx_matrix,
 			limit   = self.k 
 		)
-		# 
-		
-		self.Cent_i  = Utils.appends(
+		self.Cent_i = Utils.appends( #initializes the set of centroids with the first record in D
 			source  = self.D1,
 			dest    = [],
 			dest_fx = Utils.dest_fx_vector,
 			limit   = self.k
-		) 
-		# _________________________________________ 
-		
-		__C, label_vector = Utils.populateClusters(
-            record_id = self.k,
-            UDM       = self.U,
-            clusters  = self.C,
+		)
+		__C, label_vector = Utils.populateClusters( #new set of C and label vector initial
+            record_id         = self.k,
+            UDM               = self.U,
+            clusters          = self.C,
             ciphertext_matrix = self.D1,
 		)
-		self.C = __C
-		
-		self.Cent_j = Utils.calculateCentroids(
+		self.C      = __C
+		self.Cent_j = Utils.calculateCentroids( #centroids are recalculated
 			clusters   = self.C,
 			k          = self.k,
 			attributes = self.a,
 			m          = self.m,
 			Liu        = Liu
 		)
-
-		U, S = self.updateUDM(
-			UDM = self.U,
-			previuous_centroids=self.Cent_i, 
-			current_centroids=self.Cent_j, 
+		U, S = self.updateUDM( #update matrix U and shift matrix
+			UDM                 = self.U,
+			previuous_centroids = self.Cent_i, 
+			current_centroids   = self.Cent_j, 
 		)
-		
-		self.label_vector = Utils.fillLabelVector(
-			label_vector = label_vector,
-			k            = self.k
+		self.label_vector = Utils.fillLabelVector( 
+			label_vector  = label_vector,
+			k             = self.k
 		)
-
 		self.S = S
 		self.U = U
-		# ________________________________________
 		self.run(
-		 	ciphertext_matrix = self.D1,
-		 	UDM = self.U,
+		 	ciphertext_matrix   = self.D1,
+		 	UDM                 = self.U,
 		 	previuous_centroids = self.Cent_j
 		)
 
+	"""
+	Description: It allows working with the second part of the skmeans algorithm.
+	"""
 	def run(self,**kwargs):
-		temp   = Utils.verifyZero(self.S)
-		self.iteration_counter = 0
-		#self.label_vector = []
-		# pbar = tqdm(total=self.max_iterations)
-		while not temp: #Se detiene cuando la matriz de desplazamiento S es 0
-			self.L.debug("SKMEANS[{}]".format(self.iteration_counter))
-			C_empty = Utils.empty_cluster(k = self.k)
+		temp                   = Utils.verifyZero(self.S) #boolean variable that checks if Shift matrix had changes
+		self.iteration_counter = 0 #initialization of the iteration counter variable
 
-			__C, label_vector = Utils.populateClusters(
-                record_id = 0,
-				UDM       = self.U,
-				clusters  = C_empty,
+		while not temp: #stops when shift matrix (S) is 0
+			self.L.debug("SKMEANS[{}]".format(self.iteration_counter)) #save iteration counter in log
+			C_empty           = Utils.empty_cluster(k = self.k) #restart C to place the new clusters
+			__C, label_vector = Utils.populateClusters( #new set of C and new labeled vector
+                record_id         = 0,
+				UDM               = self.U,
+				clusters          = C_empty,
 				ciphertext_matrix = self.D1,
-				centroids = self.Cent_j,
+				centroids         = self.Cent_j,
 			)
-			C = __C
+			C      = __C
 			self.C = C 
-			Cent_i = copy.copy(self.Cent_j) #Reasigna los elementos de cent_j a cent_i
-			
-			self.L.debug("SKMEANS[{}] CALCULATE_CENTROIDS".format(self.iteration_counter))
-			self.Cent_j = Utils.calculateCentroids(
+			Cent_i = copy.copy(self.Cent_j) #reassign the elements of cent_j to cent_i
+			self.L.debug("SKMEANS[{}] CALCULATE_CENTROIDS".format(self.iteration_counter)) #save iteration counter in log
+			self.Cent_j = Utils.calculateCentroids( #centroids are recalculated
 				clusters   = self.C,
 				k          = self.k,
 				attributes = self.a,
 				m          = self.m,
 				Liu        = Liu
 			)
-			self.L.debug("SKMEANS[{}] UPDATE_UDM".format(self.iteration_counter))
-			U, S = self.updateUDM(
-				UDM = self.U,
-				previuous_centroids=Cent_i, 
-				current_centroids=self.Cent_j, 
+			self.L.debug("SKMEANS[{}] UPDATE_UDM".format(self.iteration_counter)) #save iteration counter in log
+			U, S = self.updateUDM( #update U and shift matrix
+				UDM                 = self.U,
+				previuous_centroids = Cent_i, 
+				current_centroids   = self.Cent_j, 
 			)
 			self.U = U
-			temp = Utils.verifyZero(S)
-			self.L.debug("SKMEANS[{}] VERIFY_ZERO={}".format(self.iteration_counter,temp))
+			temp   = Utils.verifyZero(S) #boolean variable that checks if Shift matrix had changes
+			self.L.debug("SKMEANS[{}] VERIFY_ZERO={}".format(self.iteration_counter,temp)) #save iteration counter and temp in log
 			self.label_vector = label_vector
-			self.iteration_counter += 1
-			if(self.iteration_counter >= self.max_iterations):
+			self.iteration_counter += 1 #increase number of iterations
+			if(self.iteration_counter >= self.max_iterations): #if the iterations reach the maximum it stops
 				temp = True
-			# pbar.update(1)
-			# progress += 1
-			# print("ITERATION[{}]".format(self.iteration_counter))
-			# print("")
-		return self.C,self.label_vector
+		return ClusteringResult(
+        	labels_vector = label_vector
+   		)
 	
 	"""
 	description:  Update UDM matrix.
@@ -143,34 +129,28 @@ class SKMeans(object):
 		Cent_j: next set of centroids
 		m: number of attributes of SK
 	"""
-	def updateUDM(self, **kwargs): #Proceso de actualizacion de la matriz U
+	def updateUDM(self, **kwargs): #U matrix update process
 		U      = kwargs.get("UDM")
 		Cent_i = kwargs.get("previuous_centroids")
 		Cent_j = kwargs.get("current_centroids")
-		# ________________________________________________________ 
-		S1     = np.zeros((self.k,self.a,self.m)).tolist()
+		S1     = np.zeros((self.k,self.a,self.m)).tolist() #Fill S with 0
+
 		for i in range(len(Cent_i)):
 			for j in range(len(Cent_i[i])):
-				S1[i][j] = Liu.subtract(ciphertext_1 = Cent_i[i][j], ciphertext_2 = Cent_j[i][j]) #Resta con el esquema de Liu	
-		# ______________________________________________________________________________
-		#print(S1)
-		#time.sleep(5)
-		S = self.dataowner.userActions(
+				S1[i][j] = Liu.subtract(ciphertext_1 = Cent_i[i][j], ciphertext_2 = Cent_j[i][j]) #subtract with Liu's scheme
+		S = self.dataowner.userActions( #decryption by data owner #S -> 2D matrix
 			shift_matrix = S1,
 			m            = self.m
-		) #Descifrado por parte del data owner #S -> matriz 2D  
-
+		)
 		U1 = []
-		# np.zeros((len(U),len(S),len(S[0])))
-		for x in range(len(U)): ##Construcción de U1 vacia
-			U1.append([])
+		for x in range(len(U)): # construction of U1
+			U1.append([]) #first dimension of U
 			for y in range(self.k):
-				U1[x].append([])
+				U1[x].append([]) #second dimension of U
 				for z in range(self.a):
-					U1[x][y].append([])
-					if y > x: #Se revisa U completa.
-						U1[x][y][z] = ((-U[y][x][z] + S[y][z])) #Suma de cada elemento de U con S
+					U1[x][y].append([]) #third dimension of U
+					if y > x: #complete U is reviewed.
+						U1[x][y][z] = ((-U[y][x][z] + S[y][z])) #sum of each element of U with S
 					else:
-						U1[x][y][z] = (U[x][y][z] + S[y][z]) #Suma de cada elemento de U con S
-
-		return U1,S #Triangulo inferior de U y matriz de desplazamiento
+						U1[x][y][z] = (U[x][y][z] + S[y][z]) #sum of each element of U with S
+		return U1,S

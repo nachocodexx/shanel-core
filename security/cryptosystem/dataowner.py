@@ -23,7 +23,7 @@ Description:
 Attributes:
 	m: int   - constraints [ m >= 3 ]
 		Number of attributes of SK
-	liu_schema: Liu <object>
+	liu_scheme: Liu <object>
 		represent a symmetric encryption scheme
 	fdh_ope: 
 		represents the Frequency and Distribution Hiding OPE (FDH-OPE) 
@@ -40,202 +40,126 @@ class DataOwner(object):
 		self.sk         = self.liu_scheme.secretKey( m = self.m )
 		self.messageIntervals, self.cypherIntervals = {}, {}
 
-	def setM(self,m):
-		self.m = m
-
 	"""
 	description: Data preparation.
 	attributes: 
-		rawD: original dataset
-		D: numeric dataset
+		plaintext_matrix: original dataset (numerical)
 		a: number of attributes of D
-		m: number of attributes of SK
+		threshold: how close the records must be to belong to the same cluster
+		algorithm: clustering algorithm to use
 	"""
 	def outsourcedData(self,**kwargs):
-		# ____________
-		#   Transform: rawD -> D(numeric) 
-		# ___________
-		D      = kwargs.get("plaintext_matrix",[[]])
-		Dshape = Utils.getShapeOfMatrix(D)
-		a = kwargs.get("attributes",  Dshape[1] )
-		# encryption_result: ciphertext_matrix, U: UDM  
-		encryption_result = self.liu_scheme.encryptMatrix(
-			plaintext_matrix = D,
-			secret_key       = self.sk,
-			m                = self.m
-		)
-		U  = Utils.create_UDM(plaintext_matrix = D)
-		return encryption_result,U
+		plaintext_matrix = kwargs.get("plaintext_matrix",[[]])
+		Dshape           = Utils.getShapeOfMatrix(plaintext_matrix)
+		a                = kwargs.get("attributes",  Dshape[1] )
+		threshold        = kwargs.get("threshold",0.01)
+		algorithm        = kwargs.get("algorithm","SKMEANS")
 
-	"""
-	description: Data preparation.
-	attributes: 
-		rawD: original dataset
-		D: numeric dataset
-		a: number of attributes of D
-		m: number of attributes of SK
-	"""
-	def outsourcedDataAndStats(self,**kwargs):
-		# ____________
-		#   Transform: rawD -> D(numeric) 
-		# ___________
-		D      = kwargs.get("plaintext_matrix",[[]])
-		Dshape = Utils.getShapeOfMatrix(D)
-		a = kwargs.get("attributes",  Dshape[1] )
-		encryption_result = self.liu_scheme.encryptMatrix(
-			plaintext_matrix = D,
+		encryption_result = self.liu_scheme.encryptMatrix( #The plaintext is sent to Liu scheme to encrypt
+			plaintext_matrix = plaintext_matrix,
 			secret_key       = self.sk,
 			m                = self.m
 		)
-		
-		start_time_udm = time()
-		U  = Utils.create_UDM(plaintext_matrix = D)
-		udm_time = time()  - start_time_udm
+
+		start_time_udm = time() 
+		U, encrypted_threshold = self.get_U( #U is generated according to the chosen algorithm
+			algorithm         = algorithm,
+			plaintext_matrix  = plaintext_matrix,
+			threshold         = threshold
+		)
+		udm_time = time() - start_time_udm
+
 		return OutsourceDataStats(
-			UDM = U,
-			udm_time = udm_time, 
-			encrypted_matrix = encryption_result.matrix,
-			encrypted_matrix_time = encryption_result.encryption_time
-		)
-
-	"""
-	description: Data preparation.
-	attributes: 
-		rawD: original dataset
-		D: numeric dataset
-		a: number of attributes of D
-		m: number of attributes of SK
-	"""
-	def outsourcedDataVectorizeAndStats(self,**kwargs):
-		# ____________
-		#   Transform: rawD -> D(numeric) 
-		# ___________
-		D                 = kwargs.get("plaintext_matrix",[[]])
-		Dshape            = Utils.getShapeOfMatrix(D)
-		N                 = Dshape[0]
-		a                 = kwargs.get("attributes",  Dshape[1] )
-		# 
-		udm_init          = kwargs.get("udm_init","zeros")
-		encryption_result = self.liu_scheme.encryptMatrix(
-			plaintext_matrix = D,
-			secret_key       = self.sk,
-			m                = self.m
-		)
-
-		start_time_udm    = time()
-		U                 = np.zeros((N,N,a)).tolist() if(udm_init == "zeros" )  else Utils.create_UDM(plaintext_matrix = D)
-		udm_time          = time()  - start_time_udm
-		# ________________________________________________________________________________________________________________
-		return OutsourceDataStats(
-			UDM = U,
-			udm_time = udm_time, 
-			encrypted_matrix = encryption_result.matrix,
-			encrypted_matrix_time = encryption_result.encryption_time
-		)
-
-
-	"""
-	description: Data preparation.
-	attributes: 
-		rawD: original dataset
-		D: numeric dataset
-		a: number of attributes of D
-		m: number of attributes of SK
-	"""
-	def outsourceDataDBS(self, **kwargs): 
-		D      = kwargs.get("plaintext_matrix",[[]])
-		Dshape = Utils.getShapeOfMatrix(D)
-		a      = kwargs.get("attributes",  Dshape[1] )
-		#algorithm = kwargs.get("algorithm", 1)
-
-		encryption_result = self.liu_scheme.encryptMatrix(
-			plaintext_matrix = D,
-			secret_key       = self.sk,
-			m                = self.m
-		)
-
-		EU  = Utils.calculateUDM(plaintext_matrix = D)
-
-		self.messageIntervals, self.cypherIntervals = Fdhope.keygen( #Generacion de los rangos de cada espacio
-			dataset = EU
-			)
-		start_time_udm    = time()
-		for x in range(len(EU)): #Cifrado de UDM 
-			for y in range(x):
-				for z in range(len(EU[x][y])):
-					EU[x][y][z] = Fdhope.encrypt(
-						plaintext    = EU[x][y][z], 
-						sens         = self.sens, 
-						messagespace = self.messageIntervals, 
-						cipherspace  = self.cypherIntervals
-					) #Función de cifrado de la matriz
-		udm_time          = time()  - start_time_udm
-		
-		return OutsourceDataStats(
-			UDM                   = EU,
-			udm_time              = udm_time, 
-			encrypted_matrix      = encryption_result.matrix,
-			encrypted_matrix_time = encryption_result.encryption_time,
-			messageIntervals      = self.messageIntervals,
-			cypherIntervals       = self.cypherIntervals
-			)
-		#return encryption_result, EU, self.messageIntervals, self.cypherIntervals
-
-	"""
-	description: Data preparation.
-	attributes: 
-		rawD: original dataset
-		D: numeric dataset
-		a: number of attributes of D
-		m: number of attributes of SK
-	"""
-	def outsourceDataDbsnnc(self, **kwargs): 
-		D         = kwargs.get("plaintext_matrix",[[]])
-		Dshape    = Utils.getShapeOfMatrix(D)
-		a         = kwargs.get("attributes",  Dshape[1] )
-		threshold = kwargs.get("threshold",0.01)
-
-		encryption_result = self.liu_scheme.encryptMatrix(
-			plaintext_matrix = D,
-			secret_key       = self.sk,
-			m                = self.m
-		)
-
-		EU  = Utils.calculateDM(plaintext_matrix = D)
-		
-		self.messageIntervals, self.cypherIntervals = Fdhope.keygen( #Generacion de los rangos de cada espacio
-			dataset   = EU
-			)
-
-		start_time_udm    = time()
-
-		for x in range(len(EU)): #Cifrado de UDM 
-			for y in range(x):
-				EU[x][y] = Fdhope.encrypt(
-					plaintext    = EU[x][y], 
-					messagespace = self.messageIntervals, 
-					cipherspace  = self.cypherIntervals
-				)
-				EU[y][x] = EU[x][y]
-				 #Función de cifrado de la matriz
-		udm_time          = time()  - start_time_udm 
-
-		encrypted_threshold = Fdhope.encrypt(
-			plaintext    = threshold,
-			messagespace = self.messageIntervals, 
-			cipherspace  = self.cypherIntervals
-		)
-		
-		return OutsourceDataStats(
-			UDM                   = EU,
+			UDM                   = U,
 			udm_time              = udm_time, 
 			encrypted_matrix      = encryption_result.matrix,
 			encrypted_matrix_time = encryption_result.encryption_time,
 			messageIntervals      = self.messageIntervals,
 			cypherIntervals       = self.cypherIntervals,
 			encrypted_threshold   = encrypted_threshold
+		)
+
+	"""
+	description: allows to generate the matrix U according to the type of algorithm to use
+	attributes:
+		plaintext_matrix: original dataset (numerical)
+		threshold: how close the records must be to belong to the same cluster
+		algorithm: clustering algorithm to use
+	"""
+	def get_U(self,**kwargs):
+		plaintext_matrix = kwargs.get("plaintext_matrix")
+		threshold        = kwargs.get("threshold")
+		algorithm        = kwargs.get("algorithm")
+		encrypted_threshold = 0 #threshold is 0 if not required by the algorithm
+
+		if (algorithm == "SKMEANS"): 
+			U  = Utils.create_UDM( #Matrix UDM is created
+				plaintext_matrix = plaintext_matrix
+				)
+
+		elif(algorithm == "DBSKMEANS"):
+			EU  = Utils.create_UDM( # Matrix UDM is created
+				plaintext_matrix = plaintext_matrix
+				)
+			self.messageIntervals, self.cypherIntervals = Fdhope.keygen( #the intervals (SK) of each space are generated
+			dataset = EU
 			)
-		#return encryption_result, EU, self.messageIntervals, self.cypherIntervals
+			U = self.encrypt_U( #Matrix EU is encrypted
+				U = EU,
+				algorithm = algorithm
+			)
+
+		elif(algorithm == "DBSNNC"):
+			ED  = Utils.calculateDM( #Matrix ED is created
+				plaintext_matrix = plaintext_matrix
+			)
+			self.messageIntervals, self.cypherIntervals = Fdhope.keygen( #the intervals (SK) of each space are generated
+			dataset = ED
+			)
+			U = self.encrypt_U( #Matrix EU is encrypted
+				U = ED,
+				algorithm = algorithm
+			)
+			encrypted_threshold = Fdhope.encrypt( #Threshold is encrypted
+				plaintext    = threshold,
+				messagespace = self.messageIntervals, 
+				cipherspace  = self.cypherIntervals
+			)
+
+		return U, encrypted_threshold
+
+
+	"""
+	description: allows to encrypt the U
+	attributes:
+		U: matrix to be encrypted
+		algorithm: clustering algorithm to use
+	"""
+	def encrypt_U(self,**kwargs):
+		U                = kwargs.get("U")
+		algorithm        = kwargs.get("algorithm")
+
+		for x in range(len(U)): 
+			for y in range(x):
+				
+				if (algorithm == "DBSKMEANS"): #if the algorithm is dbskmeans, one more dimension needs to be traversed
+					for z in range(len(U[x][y])):
+						U[x][y][z] = Fdhope.encrypt( #the lower triangle of U is encrypted
+							plaintext    = U[x][y][z], 
+							sens         = self.sens, 
+							messagespace = self.messageIntervals, 
+							cipherspace  = self.cypherIntervals
+						)
+						U[y][x][z] = U[x][y][z] #the equivalent position is obtained to fill the upper triangle
+				
+				elif(algorithm == "DBSNNC"):
+					U[x][y] = Fdhope.encrypt( #the lower triangle of U is encrypted
+						plaintext    = U[x][y], 
+						messagespace = self.messageIntervals, 
+						cipherspace  = self.cypherIntervals
+					)
+					U[y][x] = U[x][y] #the equivalent position is obtained to fill the upper triangle
+		return U
 
 
 	"""
@@ -257,8 +181,6 @@ class DataOwner(object):
 		return S
 
 	
-
-
 	"""
 	description: decrypt final clusters
 	attributes:
