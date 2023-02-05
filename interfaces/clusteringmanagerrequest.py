@@ -1,7 +1,6 @@
 from uuid import uuid4
 import time
 
-
 class ClusteringRequestManager(object):
     def __init__(self,**kwargs):
         self.requestId        = kwargs.get("requestId",str(uuid4()))

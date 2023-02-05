@@ -1,25 +1,13 @@
 import numpy as np
 from utils.Utils import Utils
-from .FDHOpe import Fdhope
+from security.cryptosystem.FDHOpe import Fdhope
 from time import time
-
-
-class OutsourceDataStats(object):
-	def __init__(self,**kwargs):
-		self.udm_time              = kwargs.get("udm_time",0)
-		self.UDM                   = kwargs.get("UDM",np.array([]))
-		self.encrypted_matrix      = kwargs.get("encrypted_matrix",np.array([]))
-		self.encrypted_matrix_time = kwargs.get("encrypted_matrix_time",np.array([]))
-		self.messageIntervals      = kwargs.get("messageIntervals",{})
-		self.cypherIntervals       = kwargs.get("cypherIntervals",{})
-		self.encrypted_threshold   = kwargs.get("encrypted_threshold",0)
-	
+from interfaces.dataowner_result import DataownerResult
 
 """
 Description:
 	A class that represents the preparation step, performed by data owners, 
 	to securely externalize their data to the TPDM that provides DMaaS.
-
 Attributes:
 	m: int   - constraints [ m >= 3 ]
 		Number of attributes of SK
@@ -69,11 +57,11 @@ class DataOwner(object):
 		)
 		udm_time = time() - start_time_udm
 
-		return OutsourceDataStats(
+		return DataownerResult(
 			UDM                   = U,
 			udm_time              = udm_time, 
 			encrypted_matrix      = encryption_result.matrix,
-			encrypted_matrix_time = encryption_result.encryption_time,
+			encrypted_matrix_time = encryption_result.time,
 			messageIntervals      = self.messageIntervals,
 			cypherIntervals       = self.cypherIntervals,
 			encrypted_threshold   = encrypted_threshold
@@ -93,24 +81,22 @@ class DataOwner(object):
 		encrypted_threshold = 0 #threshold is 0 if not required by the algorithm
 
 		if (algorithm == "SKMEANS"): 
-			U  = Utils.create_UDM( #Matrix UDM is created
+			U  = self.__calculateUDM( #Matrix UDM is created
 				plaintext_matrix = plaintext_matrix
 				)
-
 		elif(algorithm == "DBSKMEANS"):
-			EU  = Utils.create_UDM( # Matrix UDM is created
+			EU  = self.__calculateUDM( # Matrix UDM is created
 				plaintext_matrix = plaintext_matrix
 				)
 			self.messageIntervals, self.cypherIntervals = Fdhope.keygen( #the intervals (SK) of each space are generated
-			dataset = EU
+				dataset = EU
 			)
 			U = self.encrypt_U( #Matrix EU is encrypted
 				U = EU,
 				algorithm = algorithm
 			)
-
 		elif(algorithm == "DBSNNC"):
-			ED  = Utils.calculateDM( #Matrix ED is created
+			ED  = self.__calculateDM( #Matrix ED is created
 				plaintext_matrix = plaintext_matrix
 			)
 			self.messageIntervals, self.cypherIntervals = Fdhope.keygen( #the intervals (SK) of each space are generated
@@ -136,14 +122,14 @@ class DataOwner(object):
 		algorithm: clustering algorithm to use
 	"""
 	def encrypt_U(self,**kwargs):
-		U                = kwargs.get("U")
-		algorithm        = kwargs.get("algorithm")
-
-		for x in range(len(U)): 
+		U         = kwargs.get("U")
+		Ushape    = Utils.getShapeOfMatrix(U)
+		algorithm = kwargs.get("algorithm")
+		
+		for x in range(Ushape[0]): 
 			for y in range(x):
-				
 				if (algorithm == "DBSKMEANS"): #if the algorithm is dbskmeans, one more dimension needs to be traversed
-					for z in range(len(U[x][y])):
+					for z in range(Ushape[2]):
 						U[x][y][z] = Fdhope.encrypt( #the lower triangle of U is encrypted
 							plaintext    = U[x][y][z], 
 							sens         = self.sens, 
@@ -151,7 +137,6 @@ class DataOwner(object):
 							cipherspace  = self.cypherIntervals
 						)
 						U[y][x][z] = U[x][y][z] #the equivalent position is obtained to fill the upper triangle
-				
 				elif(algorithm == "DBSNNC"):
 					U[x][y] = Fdhope.encrypt( #the lower triangle of U is encrypted
 						plaintext    = U[x][y], 
@@ -161,7 +146,56 @@ class DataOwner(object):
 					U[y][x] = U[x][y] #the equivalent position is obtained to fill the upper triangle
 		return U
 
+	def __calculateUDM(self,**kwargs):
+		try:
+			D      = kwargs.get("plaintext_matrix")
+			DShape = Utils.getShapeOfMatrix(D)
+			a      = kwargs.get("attributes",DShape[1])
+			U      = []
+			fx     = Utils.fxTesis    
 
+			for x in range(DShape[0]):  # Construcción de U vacia 
+				U.append([]) 
+				for y in range(DShape[0]):
+					U[x].append([])
+					for z in range(a):
+						U[x][y].append([])
+						value = fx(D,x,y,z)
+						U[x][y][z]=value
+			return np.array(U)
+		except Exception as e:
+			print(e)
+			raise e
+
+	"""
+	description: EDM matrix calculation
+	attributes:
+		D: numeric dataset
+		a: number of attributes of D
+	"""
+	def __calculateDM(self,**kwargs): #Calculo de la matriz DM
+		D      = kwargs.get("plaintext_matrix")
+		DShape = Utils.getShapeOfMatrix(D)
+		a      = kwargs.get("attributes",DShape[1]) 
+		
+		ED     = []
+		for x in range(DShape[0]): 
+			ED.append([]) 
+			#for y in range(DShape[0]):
+			 #   ED[x].append([])
+		
+		for x in range(DShape[0]): #Llenado de U con distancias entre los datos en plano	
+			for y in range(DShape[0]):
+				dist = 0
+				#print("_______")
+				for z in range(a):
+					dist += abs(D[x][z] - D[y][z])
+					#print("0", D[x][z], "1", D[y][z], "dist", dist)
+					#print("dist",dist)
+				ED[x].append(dist)
+			#print(ED)
+		return np.array(ED)
+		
 	"""
 	description: dataowner participation for shift matrix decryption
 	attributes:
@@ -169,16 +203,14 @@ class DataOwner(object):
 		m: number of attributes of SK
 	"""
 	def userActions(self,**kwargs):
-		# __________________________________
 		S1 = kwargs.get("shift_matrix",[])
 		m  = kwargs.get("m",3)
-		# ___________________________________
 		S  = self.liu_scheme.decryptMatrix(
 			ciphertext_matrix = S1,
 			secret_key        = self.sk,
 			m                 = self.m
 		)
-		return S
+		return S.matrix
 
 	
 	"""

@@ -19,7 +19,7 @@ from clustering.secure.dbskmeans import Dbskmeans
 from clustering.secure.dbsnnc import Dbsnnc
 
 from security.cryptosystem.liu import Liu
-from security.cryptosystem.dataowner import DataOwner
+from security.dataowner import DataOwner
 from security.cryptosystem.FDHOpe import Fdhope
 
 from utils.Utils import Utils
@@ -36,10 +36,124 @@ plaintext_matrix = [
     [62.15,32.29],
     [59.47,36.04]
 ]
+D = [[-3,3],[-2,3],[-3,2],[-2,2], 
+    [2,3], [3,3], [2,2], [3,2], 
+    [-3,-2],[-3,-3],[-2,-3],[-2,-2],
+    [2,-3],[3,-3],[2,-2],[3,-2]]
+
+Data1 = pd.read_csv("D:/scs/testing/data1.csv" ,header=None).values
 
 
 class TestCore(unittest.TestCase):
 
+    def test_allAlgorithms(self):
+        dow0 = DataOwner(
+            m = m,
+            liu_scheme = liu
+        )
+        outsourced = dow0.outsourcedData(
+            plaintext_matrix = Data1,
+            algorithm = "SKMEANS"
+        )
+        skmeans = SKMeans(
+            ciphertext_matrix = outsourced.encrypted_matrix,
+            UDM               = outsourced.UDM,
+            k                 = k,
+            m                 = m,
+            dataowner         = dow0 
+        )
+
+        outsourced = dow0.outsourcedData(
+            plaintext_matrix = Data1,
+            algorithm = "DBSKMEANS"
+        )
+        dbskmeans = Dbskmeans(
+            ciphertext_matrix = outsourced.encrypted_matrix,
+            UDM               = outsourced.UDM,
+            k                 = k,
+            m                 = m,
+            dataowner         = dow0,
+            messageIntervals  = outsourced.messageIntervals,
+            cypherIntervals   = outsourced.cypherIntervals 
+        )
+
+        outsourced = dow0.outsourcedData(
+            plaintext_matrix = Data1,
+            algorithm = "DBSNNC",
+            threshold = 5
+        )
+        dbsnnc = Dbsnnc.run(
+            EDM = outsourced.UDM,
+            encrypted_threshold = outsourced.encrypted_threshold
+        )
+        print("labelvector_skmeans =", skmeans.label_vector)
+        print("labelvector_dbskmeans =",dbskmeans.label_vector)
+        print("labelvector_dbsnnc =", dbsnnc.label_vector)
+
+
+    @unittest.skip("Prueba de dbskmeans")
+    def test_dbskmeans(self):
+        algorithm = "DBSKMEANS"
+
+        dow0 = DataOwner(
+            m = m,
+            liu_scheme = liu
+        )
+        outsourced = dow0.outsourcedData(
+            plaintext_matrix = Data1,
+            algorithm = algorithm,
+            threshold = 1
+        )
+        
+        dbskmeans = Dbskmeans(
+            ciphertext_matrix = outsourced.encrypted_matrix,
+            UDM               = outsourced.UDM,
+            k                 = k,
+            m                 = m,
+            dataowner         = dow0,
+            messageIntervals  = outsourced.messageIntervals,
+            cypherIntervals   = outsourced.cypherIntervals 
+        )
+       
+
+    @unittest.skip("Prueba de dbsnnc")
+    def test_dbsnnc(self):
+        dow0 = DataOwner(
+            m = m,
+            liu_scheme = liu
+        )
+        outsourced = dow0.outsourcedData(
+            plaintext_matrix = D,
+            algorithm = "DBSNNC",
+            threshold = 1
+        )
+        dbsnnc = Dbsnnc.run(
+            EDM = outsourced.UDM,
+            encrypted_threshold = outsourced.encrypted_threshold
+        )
+        print(dbsnnc.labels_vector)
+
+    @unittest.skip("")
+    def test_skmeans_refactorized(self):
+        algorithm = "SKMEANS"
+        dow0 = DataOwner(
+            m = m,
+            liu_scheme = liu
+        )
+        outsourced = dow0.outsourcedData(
+            plaintext_matrix = D,
+            algorithm = algorithm,
+        )
+        skmeans = SKMeans(
+            ciphertext_matrix = outsourced.encrypted_matrix,
+            UDM               = outsourced.UDM,
+            k                 = k,
+            m                 = m,
+            dataowner         = dow0 
+        )
+        print(skmeans.label_vector)
+
+    @unittest.skip("Prueba del Outsourced uniendo todos los algoritmos")
     def test_outsourced(self):
         dow0 = DataOwner(
             m = m,
@@ -48,8 +162,8 @@ class TestCore(unittest.TestCase):
         outsourced = dow0.outsourcedData(
             plaintext_matrix = plaintext_matrix,
             #algorithm = "SKMEANS",
-            algorithm = "DBSKMEANS",
-            #algorithm = "DBSNNC",
+            #algorithm = "DBSKMEANS",
+            algorithm = "DBSNNC",
             threshold = 1
         )
         #print("D1",outsourced.encrypted_matrix)
@@ -90,21 +204,7 @@ class TestCore(unittest.TestCase):
         print("D1",outsourced.encrypted_matrix)
         print("ED",outsourced.UDM)
         print("Threshold",outsourced.encrypted_threshold)
-
-        
-    @unittest.skip("")
-    def test_outsourcedbskmeans(self):
-        dow0 = DataOwner(
-            m = m,
-            liu_scheme = liu,
-        )
-        outsourced = dow0.outsourceDataDBS(
-            plaintext_matrix = plaintext_matrix
-        )
-
-        print(outsourced.messageIntervals)
-        print(outsourced.cypherIntervals)
-
+ 
 
 if __name__ == '__main__':
     unittest.main()

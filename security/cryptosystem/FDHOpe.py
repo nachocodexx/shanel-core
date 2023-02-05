@@ -1,6 +1,7 @@
 import random
 import numpy as np
 from collections import Counter
+from utils.Utils import Utils
 
 """
 Description: 
@@ -17,25 +18,24 @@ class Fdhope(object):
         proportion: indicates how much the encrypted space will grow in relation to the message space
     """
     def keygen(**kwargs): 
-        D                    = kwargs.get("dataset")
+        dataset              = kwargs.get("dataset") #Cambiar nombre de variable
         minVal               = kwargs.get("minValue", 0)
         max_range            = kwargs.get("max_range",5)
         proportion           = kwargs.get("proportion", 5)
-        maxVal_messagespace  = round(Fdhope.findMax(D)) + 1 #+1 to be able to place the last element in the range
+        Dshape               = Utils.getShapeOfMatrix(dataset)
+        maxVal_messagespace  = round(Fdhope.findMax(dataset)) + 1 #+1 to be able to place the last element in the range
         maxVal_cipherspace   = maxVal_messagespace * proportion #indicates how much it grows with respect to the message space
-        lenTriangle          = len(D) * len(D[0]) #size of the lower interval of U
+        lenTriangle          = Dshape[0] * Dshape[1] #size of the lower interval of U
         n_range              = random.randint(2,max_range) #Number of ranges created
         messagespace,new_density = {}, {}
-
 
         _messagespace = Fdhope.generate_range_values( #Generate possible message space
             minValue = minVal, 
             maxValue = maxVal_messagespace, 
             n_range  = n_range
         )
-
         old_density  = Fdhope.calculate_dens( #Calculates the amount of data that is in each range
-            dataset            = D, 
+            dataset            = dataset, 
             messagespace       = _messagespace, 
             maxVal_cipherspace = maxVal_cipherspace
         )
@@ -118,28 +118,28 @@ class Fdhope(object):
     Description: Counts elements that belong to each defined range
     """
     def calculate_dens(**kwargs):
-        D                  = kwargs.get("dataset")
+        dataset            = kwargs.get("dataset")
+        Dshape             = Utils.getShapeOfMatrix(dataset)
         messagespace       = kwargs.get("messagespace")
         dens               = []
 
-        for plaintext_matrix in D:
+        for plaintext_matrix in dataset:
             for plaintext_vector in plaintext_matrix:
-
-                if (type(plaintext_vector) == list): #in the case of an EU matrix, it has one more dimension
+                if len(Dshape) == 3: #in the case of an EU matrix, it has one more dimension
                     for plaintext in plaintext_vector:
                         key = Fdhope.getIntervalID( #returns the id of the range in which the plaintext is found
                             plaintext = plaintext, 
                             messagespace = messagespace
                             )
                         dens.append(key)
-
-                else: #in the case of an ED matrix
+                elif len(Dshape) == 2: #in the case of an ED matrix
                     key = Fdhope.getIntervalID( #returns the id of the range in which the plaintext is found
                         plaintext = plaintext_vector, 
                         messagespace = messagespace
                         )
                     dens.append(key)
-
+                else:
+                    raise Exception("dimension error")
         conteo = Counter(dens) #calculate the number of items found
         return dict(conteo.items()) #save conteo as dictionary
 
@@ -196,7 +196,7 @@ class Fdhope(object):
     Description: It allows to find the maximum value of the dataset 
     """
     def findMax(D):  #Obtiene el valor maximo en D para definir los intervalos
-        return np.max(np.abs(np.array(D).flatten()))
+        return np.max(np.abs(D.flatten()))
 
 
     """

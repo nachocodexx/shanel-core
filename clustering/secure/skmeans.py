@@ -29,21 +29,9 @@ class SKMeans(object):
 		self.dataowner      = kwargs.get("dataowner") 
 		self.max_iterations = kwargs.get("max_iterations",100) #maximum number of possible iterations until it stops
 		self.L              = kwargs.get("logger",DumbLogger()) #only for DEBUGGING purposes. 
-		
-		C_empty = Utils.empty_cluster(k = self.k) #set of size k empty
-		self.C  = Utils.appends( #add the first k records of D to c_empty
-			source  = self.D1, 
-			dest    = C_empty, 
-			dest_fx = Utils.dest_fx_matrix,
-			limit   = self.k 
-		)
-		self.Cent_i = Utils.appends( #initializes the set of centroids with the first record in D
-			source  = self.D1,
-			dest    = [],
-			dest_fx = Utils.dest_fx_vector,
-			limit   = self.k
-		)
-		__C, label_vector = Utils.populateClusters( #new set of C and label vector initial
+		self.C              = list(map(lambda x:[self.D1[x].tolist()],list(range(0,self.k)))) #add the first k records of D to C
+		self.Cent_i         = [self.D1[i] for i in range(self.k)] # initializes the set of centroids with the first record in D
+		__C, label_vector   = Utils.populateClusters( #new set of C and label vector initial
             record_id         = self.k,
             UDM               = self.U,
             clusters          = self.C,
@@ -68,11 +56,7 @@ class SKMeans(object):
 		)
 		self.S = S
 		self.U = U
-		self.run(
-		 	ciphertext_matrix   = self.D1,
-		 	UDM                 = self.U,
-		 	previuous_centroids = self.Cent_j
-		)
+		self.run()
 
 	"""
 	Description: It allows working with the second part of the skmeans algorithm.
@@ -116,7 +100,7 @@ class SKMeans(object):
 			if(self.iteration_counter >= self.max_iterations): #if the iterations reach the maximum it stops
 				temp = True
 		return ClusteringResult(
-        	labels_vector = label_vector
+        	label_vector = self.label_vector
    		)
 	
 	"""
@@ -134,7 +118,6 @@ class SKMeans(object):
 		Cent_i = kwargs.get("previuous_centroids")
 		Cent_j = kwargs.get("current_centroids")
 		S1     = np.zeros((self.k,self.a,self.m)).tolist() #Fill S with 0
-
 		for i in range(len(Cent_i)):
 			for j in range(len(Cent_i[i])):
 				S1[i][j] = Liu.subtract(ciphertext_1 = Cent_i[i][j], ciphertext_2 = Cent_j[i][j]) #subtract with Liu's scheme
@@ -154,3 +137,7 @@ class SKMeans(object):
 					else:
 						U1[x][y][z] = (U[x][y][z] + S[y][z]) #sum of each element of U with S
 		return U1,S
+
+if __name__ == "__main__":
+	D = np.load("D:/scs/testing/SKMEANS_matrix.npy")
+	UDM = np.load("D:/scs/testing/SKMEANS_udm.npy")

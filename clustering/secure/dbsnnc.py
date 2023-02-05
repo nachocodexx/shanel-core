@@ -22,15 +22,13 @@ class Dbsnnc(object):
 
 	def run(**kwargs):
 		startTime          = time()
-		D                  = kwargs.get("ciphertext_matrix")
 		ED                 = kwargs.get("EDM")
-		threshold          = kwargs.get("encrypted_threshold",2)
-		D                  = D.tolist()
-		Dshape             = Utils.getShapeOfMatrix(D)
+		threshold          = kwargs.get("encrypted_threshold")
+		EDshape            = Utils.getShapeOfMatrix(ED)
 		start_service_time = time()
 		c_indexes          = [[0]] #index of the first record in D
 
-		for record_index in range(1,Dshape[0]): #iterate through the records in D
+		for record_index in range(1,EDshape[0]): #iterate through the records in D
 			for cluster_index, index_cluster in enumerate(c_indexes): #iterate the indexes of the clusters
 				record_distances = [] #distances of a record with respect to all the elements of the cluster
 				for record_index_cluster in index_cluster: # iterate through the list of cluster indexes
@@ -49,13 +47,12 @@ class Dbsnnc(object):
 		end_service_time = time()
 		label_vector = Dbsnnc.get_labelvector( #gets final label vector
 			c_indexes = c_indexes,
-			Dshape    = Dshape
+			shape     = EDshape[0]
 		)
 		service_time     = end_service_time - start_service_time
 		response_time    = time() - startTime
-		#return c_indexes, label_vector
 		return ClusteringResult(
-        	labels_vector = label_vector,
+        	label_vector = label_vector,
         	response_time = response_time,
         	service_time  = service_time
    		)
@@ -65,14 +62,13 @@ class Dbsnnc(object):
 	"""
 	def get_labelvector(**kwargs):
 		c_indexes    = kwargs.get("c_indexes",[])
-		Dshape	     = kwargs.get("Dshape")
-		label_vector = [-1]*Dshape[0] #fill label vector with -1
-
+		shape	     = kwargs.get("shape")
+		label_vector = [-1]*shape #fill label vector with -1
+		
 		for index,record_index in enumerate(c_indexes):
 			for index_r,record in enumerate(record_index):
 				label_vector[record] = index
 		return label_vector
-
 
 
 if __name__ == "__main__":
@@ -114,10 +110,10 @@ if __name__ == "__main__":
 	encrypted_threshold = 5.609272527339459
 
 
-	result, lv = Dbsnnc.run(
+	dbs = Dbsnnc.run(
 		ciphertext_matrix = D1,
 		EDM = ED,
 		encrypted_threshold = encrypted_threshold
 	)
-	print(lv)
+	print(dbs.labels_vector)
 
