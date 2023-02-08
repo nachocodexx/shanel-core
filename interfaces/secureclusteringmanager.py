@@ -6,12 +6,16 @@ class Text(object):
         workerId = kwargs.get("workerId")
         self.text = json.dumps({"workerId":workerId})
 
+"""
+Description: A dummy manager is generated for when testing manually
+"""
 class DumbSecureClusteringManager(object):
     def __init__(self):
         pass
         
     def sendSecureClusteringRequest(self,**kwargs):
         return Text(workerId = kwargs.get("workerId","localhost"))
+        
 """
 Description: 
     Class that allows the connection between the client and the manager

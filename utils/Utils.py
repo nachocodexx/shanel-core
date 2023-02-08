@@ -10,8 +10,7 @@ from uuid import uuid4
 
 class Utils(object):
 	def __init__(self):
-		pass
-	
+		pass	
 	
 	def generate_centroids(**kwargs):
 		k            = kwargs.get("k",3)

@@ -1,8 +1,6 @@
 import numpy as np
 from time import time
 from utils.Utils import Utils
-from security.cryptosystem.liu import Liu
-from logger.Dumblogger import DumbLogger
 from interfaces.clustering_result import ClusteringResult
 
 """
