@@ -2,24 +2,7 @@ from http.cookiejar import LWPCookieJar
 import random
 import numpy as np
 from time import time
-
-
-class EncryptMatrixStats(object):
-	def __init__(self,**kwargs):
-		self.matrix          = kwargs.get("matrix",np.array([]))
-		self.encryption_time = kwargs.get("encryption_time",0)
-	
-	def __str__(self):
-		return "EncryptedMatrixStats({}s)".format(self.encryption_time)
-
-class DecryptMatrixStats(object):
-	def __init__(self,**kwargs):
-		self.matrix          = kwargs.get("matrix",np.array([]))
-		self.decryption_time = kwargs.get("decryption_time",0)
-
-	def __str__(self):
-		return "DecryptedMatrixStats({}s)".format(self.decryption_time)
-
+from interfaces.cipherscheme_result import CipherschemeResult
 
 """
 Description: 
@@ -27,10 +10,10 @@ Description:
 Attributes:
     _round: Flag to know if decryption needs to be rounded based on plaintext type
 """
-
 class Liu(object):
 	def __init__(self,**kwargs):
 		self.round = kwargs.get("round",False)
+
 
 	""" 
 	description: Generate a uniform distributed numbers [0,1]
@@ -50,12 +33,11 @@ class Liu(object):
 		3. sk -> [(k_1,s_1,t_1)...(k_m,s_m,t_m)]
     """
 	def secretKey(self, **kwargs): 
-		m = kwargs.get("m",3)
+		m       = kwargs.get("m",3)
 		self.sk = []
 		zero_tp = (0,0,0)
 		for i in range(m):
-			# Se generan las tripletas
-			tp = self.generateRandom(),self.generateRandom(),self.generateRandom() 
+			tp = self.generateRandom(),self.generateRandom(),self.generateRandom() # generate triplets
 			if(i==(m-1)): 
 				while(zero_tp == tp):
 					tp = self.generateRandom(), self.generateRandom(), self.generateRandom()
@@ -67,30 +49,26 @@ class Liu(object):
 	description: split a plaintext matrix into vectors
     """
 	def encryptMatrix(self,**kwargs):
-		start_time       = time()
-		vss = kwargs.get("plaintext_matrix",[])
+		start_time = time()
+		vss        = kwargs.get("plaintext_matrix",[])
 		new_kwargs = lambda vs: {**{"plaintext_vector":vs},**kwargs}
-		# N*a*m
-		# M_               = np.asarray(list(map(lambda x: list(x),fx(plaintext_matrix.flatten()).tolist()))).flatten().reshape(plaintext_matrix.shape[0],plaintext_matrix.shape[1],m)
-		# print(M_.shape)
-		end_time         = time()
-		M_ = np.array([ self.encryptVector(**new_kwargs(vs)) for vs in vss ])
-		encryption_time  = end_time-start_time
-		return EncryptMatrixStats(matrix = M_, encryption_time = encryption_time )
-
-		
-
+		M_         = np.array([ self.encryptVector(**new_kwargs(vs)) for vs in vss ])
+		end_time   = time()
+		encryption_time = end_time-start_time
+		return CipherschemeResult(
+			matrix         = M_, 
+			time           = encryption_time,
+			operation_type = "encrypt"
+		)
 
 	"""
 	description: split a plaintext vector into scalars
     """
 	def encryptVector(self,**kwargs):
-		vs = kwargs.get("plaintext_vector",[])
+		vs         = kwargs.get("plaintext_vector",[])
 		new_kwargs = lambda v: {**{"plaintext":v},**kwargs}
 		return [ self.encryptScalar(**new_kwargs(v)) for v in vs ]
 
-
- 
 	"""
 	description: Encrypt a plaintext using SK
 	attributes:
@@ -110,22 +88,20 @@ class Liu(object):
 		f                = self.curryingEncryptScalar(sk,m)
 		fx               = np.vectorize(f ,otypes =[object] )
 		start_time       = time()
-		# N*a*m
 		M_               = np.asarray(list(map(lambda x: list(x),fx(plaintext_matrix.flatten()).tolist()))).flatten().reshape(plaintext_matrix.shape[0],plaintext_matrix.shape[1],m)
-		# print(M_.shape)
 		end_time         = time()
 		encryption_time  = end_time-start_time
-		return EncryptMatrixStats(matrix = M_, encryption_time = encryption_time )
+		return CipherschemeResult(
+			matrix         = M_, 
+			time           = encryption_time,
+			operation_type = "encrypt"
+		)
 		
-		# print("VECTORIZE_TIME {}".format(vt))
 	def curryingEncryptScalar(self,sk,m): 
 		def __inner(v):
 			self.round = True if(type(v) == int or type(v) == np.int64) else False
-			# sk         = kwargs.get("secret_key")
-			# m          = kwargs.get("m",3)
 			self.E     = []
 			self.R     = [ self.generateRandom() for i in range (m) ]
-			#E1 formula
 			e1         =  self.__eEncrypt(
 				ki = sk[0][0],
 				ti = sk[0][2],
@@ -135,8 +111,7 @@ class Liu(object):
 				rrdiff = (self.R[0]-self.R[m-2])
 			)
 			self.E.append(e1) 
-			#Ei formula
-			for i in range(1,m-1):
+			for i in range(1,m-1): #Ei formula
 				ei =  self.__eEncrypt(
 					ki = sk[i][0],
 					ti = sk[i][2],
@@ -146,8 +121,7 @@ class Liu(object):
 					rrdiff = (self.R[i]-self.R[i-1])
 				)
 				self.E.append(ei)	
-			#Em Formula
-			self.E.append((sk[m-1][0] + sk[m-1][1] + sk[m-1][2]) * self.R[m-1]) 
+			self.E.append((sk[m-1][0] + sk[m-1][1] + sk[m-1][2]) * self.R[m-1]) #Em Formula
 			return self.E
 		return __inner
 
@@ -170,8 +144,7 @@ class Liu(object):
 		m          = kwargs.get("m",3)
 		self.E     = []
 		self.R     = kwargs.get("R",[ self.generateRandom() for i in range (m) ])
-		#E1 formula
-		e1         =  self.__eEncrypt(
+		e1         =  self.__eEncrypt( #E1 formula
 			ki = sk[0][0],
 			ti = sk[0][2],
 			v  = v, 
@@ -180,8 +153,7 @@ class Liu(object):
 			rrdiff = (self.R[0]-self.R[m-2])
 		)
 		self.E.append(e1) 
-		#Ei formula
-		for i in range(1,m-1):
+		for i in range(1,m-1): #Ei formula
 			ei =  self.__eEncrypt(
 				ki = sk[i][0],
 				ti = sk[i][2],
@@ -191,8 +163,7 @@ class Liu(object):
 				rrdiff = (self.R[i]-self.R[i-1])
 			)
 			self.E.append(ei)	
-		#Em Formula
-		self.E.append((sk[m-1][0] + sk[m-1][1] + sk[m-1][2]) * self.R[m-1]) 
+		self.E.append((sk[m-1][0] + sk[m-1][1] + sk[m-1][2]) * self.R[m-1]) #Em Formula
 		return self.E
 
 
@@ -218,16 +189,24 @@ class Liu(object):
 	description: split a ciphertext matrix into vectors
     """
 	def decryptMatrix(self,**kwargs):
-		css = kwargs.get("ciphertext_matrix",[])
+		start_time = time()
+		css        = kwargs.get("ciphertext_matrix",[])
 		new_kwargs = lambda cs: {**{"ciphertext_vector":cs},**kwargs}
-		return [ self.decryptVector(**new_kwargs(cs)) for cs in css ]
+		M_ = [ self.decryptVector(**new_kwargs(cs)) for cs in css ]
+		end_time   = time()
+		decryption_time = end_time-start_time
+		return CipherschemeResult(
+			matrix         = M_, 
+			time           = decryption_time,
+			operation_type = "encrypt"
+		)
 		
-
+		
 	"""
 	description: split a ciphertext vector into scalars
     """
 	def decryptVector(self,**kwargs):
-		cs = kwargs.get("ciphertext_vector",[])
+		cs         = kwargs.get("ciphertext_vector",[])
 		new_kwargs = lambda c: {**{"ciphertext":c},**kwargs}
 		return [ self.decryptScalar(**new_kwargs(c)) for c in cs ]
 
@@ -264,7 +243,10 @@ class Liu(object):
 		M_               = fx(plaintext_matrix.flatten())
 		end_time         = time()
 		decryption_time  = end_time-start_time
-		return DecryptMatrixStats(matrix = M_, decryption_time = decryption_time )
+		return CipherschemeResult(
+			matrix         = M_,
+			time           = decryption_time,
+			operation_type = "decrypt" )
 
 	"""    
     description: Decrypt a ciphertext using SK
@@ -300,10 +282,7 @@ class Liu(object):
 		E2 = kwargs.get("ciphertext_2")
 		return (np.array(E1) + np.array(E2)).tolist()
 
-	# self.E3 = []
-	# for i in range(m):
-	# 	self.E3.append(E1[i] + E2[i])
-	# return self.E3
+	
 	"""
 	description: Multiplication of two ciphertexts
 	attributes:
@@ -311,7 +290,7 @@ class Liu(object):
 		E2: second ciphertext
     """
 	def multiply(**kwargs):
-		E1  = kwargs.get("ciphertext_1")
+		E1 = kwargs.get("ciphertext_1")
 		E2 = kwargs.get("ciphertext_2")
 		E3 = []
 		m  = len(E1)
@@ -348,14 +327,13 @@ class Liu(object):
 		E1: ciphertext
     """
 	def multiply_c(**kwargs):
-		v1  = kwargs.get("scalar")
+		v1 = kwargs.get("scalar")
 		E1 = kwargs.get("ciphertext_1")
 		E3 = []
 		m  = len(E1)
 		for i in range(m):
 			E3.append(v1 * E1[i])
 		return E3
-
 
 	"""
 	description: Subtract two ciphertexts

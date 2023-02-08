@@ -1,8 +1,11 @@
 import numpy as np
 
+"""
+Description: Interface used for the expected result of the clustering algorithms used
+"""
 class ClusteringResult(object):
     def __init__(self,**kwargs):
-        self.labels_vector   =  kwargs.get("labels_vector",np.array(()))
+        self.label_vector    = kwargs.get("label_vector",np.array(()))
         self.n_iterations    = kwargs.get("n_iterations",0)
         self.response_time   = kwargs.get("response_time",0)
         self.service_time    = kwargs.get("service_time",0)
