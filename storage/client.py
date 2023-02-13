@@ -20,6 +20,7 @@ import hashlib
 import pandas as pd
 import time
 
+
 class Client(object):
     def __init__(self,**kwargs):
         self.client_id = str(uuid.uuid4())

@@ -43,13 +43,14 @@ class SecureClusteringManager(object):
     Notes:
         serialize(): convert a value to a sequence of bits to be transmitted across a network.
     """
-    def sendSecureClusteringRequest(self,**kwargs):
-        data     = kwargs.get("data")
-        _data    = data.serialize()
-        response = requests.post(
+    def getWorker(self,**kwargs):
+        headers  = kwargs.get("headers")
+        #_data    = headers.serialize()
+        response = requests.get(
             self.clusteringURL,
-            data = _data,
-            headers= {"Content-Type":"application/json"}
+            #data = _data,
+            headers= {
+                "Content-Type":"application/json",**headers}
         )
         return response
 

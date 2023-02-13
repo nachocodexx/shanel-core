@@ -1,4 +1,5 @@
 from requests import Session,Response
+from utils.constants import Constants
 
 class DumbClusteringWorker(object):
     def __init__(self,**kwargs):
@@ -11,74 +12,55 @@ class DumbClusteringWorker(object):
              headers = kwargs,
         )
 
-
     def DBSkMeans(self,**kwargs):
         return Response()
 
-    def SKMeans_1(self,**kwargs) -> Response:
+    def SKMeans(self,**kwargs) -> Response:
         return Response()
-
-    def SKMeans_2(self,**kwargs) -> Response:
-        return Response()
-
 
 
 class SecureClusteringWorker(object):
     def __init__(self,**kwargs):
-        self.workerId  = kwargs.get("workerId")
+        self.workerId  = kwargs.get("workerId","localhost")
         self.port      = kwargs.get("port",9000)
         self.session   = kwargs.get("session")
-        self.algorithm = kwargs.get("algorithm","SK_MEANS")
-    
+        self.algorithm = kwargs.get("algorithm",Constants.ClusteringAlgorithms.SKMEANS)  
 
     def run(self,*args,**kwargs) -> Response:
-        operationIndex = kwargs.get("operationIndex",1)
-        if(self.algorithm == "SK_MEANS"):
-            return  self.SKMeans_1(**kwargs) if(operationIndex==1) else self.SKMeans_2(**kwargs)
-        elif(self.algorithm =="KMEANS"):
-            return self.kmeans(**kwargs)
-        elif (self.algorithm == "DBSKMEANS"): 
-            return self.DBSKMeans_1(**kwargs) if(operationIndex==1) else self.DBSKMeans_2(**kwargs)
-        elif (self.algorithm == "DBSNNC"):
-            return self.Dbsnnc(**kwargs)
+        if(self.algorithm == Constants.ClusteringAlgorithms.SKMEANS):
+            return self.__skmeans(**kwargs)
+        elif(self.algorithm == Constants.ClusteringAlgorithms.KMEANS):
+            return self.__kmeans(**kwargs)
+        elif (self.algorithm == Constants.ClusteringAlgorithms.DBSKMEANS): 
+            return self.__dbskmeans(**kwargs)
+        elif (self.algorithm == Constants.ClusteringAlgorithms.DBSNNC):
+            return self.__dbsnnc(**kwargs)
         else:
-            return Response(None,503)
+            return Response(
+                response = None,
+                status   = 503)
 
 
-    def kmeans(self,**kwargs) -> Response:
+    def __kmeans(self,**kwargs) -> Response:
         return self.session.post(
             "http://{}:{}/clustering/kmeans".format(self.workerId,self.port),
-             headers = kwargs,
+             headers = kwargs.get("headers",{})
         )
 
-    # { a: 1 } + {b: 2} = {a:1,b:2}
-    # { **{a:1},**{b:2,c:3} } = {a:1,b:2,c:3}
-    def SKMeans_1(self,**kwargs) -> Response:
+    def __skmeans(self,**kwargs) -> Response:
         return self.session.post(
-            "http://{}:{}/clustering/skmeans/1".format(self.workerId,self.port),
-             headers = kwargs
+            "http://{}:{}/clustering/skmeans".format(self.workerId,self.port),
+             headers = kwargs.get("headers",{})
         )
 
-    def SKMeans_2(self,**kwargs) -> Response:
+    def __dbskmeans(self, **kwargs) -> Response:
         return self.session.post(
-            "http://{}:{}/clustering/skmeans/2".format(self.workerId,self.port),
-             headers = kwargs
+            "http://{}:{}/clustering/dbskmeans".format(self.workerId,self.port),
+            headers = kwargs.get("headers",{})
         )
 
-    def DBSKMeans_1(self, **kwargs) -> Response:
-        return self.session.post(
-            "http://{}:{}/clustering/dbskmeans/1".format(self.workerId,self.port),
-            headers = kwargs,
-        )
-    
-    def DBSKMeans_2(self, **kwargs) -> Response:
-        return self.session.post(
-            "http://{}:{}/clustering/dbskmeans/2".format(self.workerId,self.port),
-            headers = kwargs,
-        )
-
-    def Dbsnnc(self,**kwargs) -> Response:
+    def __dbsnnc(self,**kwargs) -> Response:
         return self.session.post(
             "http://{}:{}/clustering/dbsnnc".format(self.workerId,self.port),
-            headers = kwargs,
+            headers = kwargs.get("headers",{})
         )
