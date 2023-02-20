@@ -22,7 +22,7 @@ def kmeans(**kwargs):
     response_time    = time() - startTime
     
     return ClusteringResult(
-        labels_vector = kmeans.labels_,
+        label_vector  = kmeans.labels_,
         n_iterations  = kmeans.n_iter_,
         response_time = response_time,
         service_time  = service_time

@@ -39,7 +39,7 @@ class DataOwner(object):
 	def outsourcedData(self,**kwargs):
 		plaintext_matrix = kwargs.get("plaintext_matrix",[[]])
 		Dshape           = Utils.getShapeOfMatrix(plaintext_matrix)
-		a                = kwargs.get("attributes",  Dshape[1] )
+		a                = kwargs.get("attributes", Dshape[1] )
 		threshold        = kwargs.get("threshold",0.01)
 		algorithm        = kwargs.get("algorithm","SKMEANS")
 

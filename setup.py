@@ -14,16 +14,15 @@ setup(
         "security.cryptosystem",
         "interfaces",
         "validationindex",
-        # "validationindex.helper",
         "clustering",
         "clustering.secure",
-        "storage",
-        "storage.doa"
+        "clustering.secure.distributed",
+        "clustering.secure.local",
     ],
     # Needed for dependencies
     install_requires=['numpy','sklearn',"funcy"],
     # *strongly* suggested for sharing
-    version='0.25.5',
+    version='0.25.7',
     # The license can be anything you like
     license='MIT',
     description='An example of a python package from pre-existing code',

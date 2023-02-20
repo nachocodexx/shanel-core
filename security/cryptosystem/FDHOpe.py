@@ -2,6 +2,8 @@ import random
 import numpy as np
 from collections import Counter
 from utils.Utils import Utils
+from time import time
+from interfaces.cipherscheme_result import CipherschemeResult
 
 """
 Description: 
@@ -74,7 +76,35 @@ class Fdhope(object):
 
         return messagespace, cipherspace
         
-    
+    def encryptMatrix(**kwargs):
+        start_time = time()
+        plaintext_matrix = kwargs.pop("plaintext_matrix")
+        xs = []
+        for plaintext_vector in plaintext_matrix:
+            x = Fdhope.encryptVector(
+                plaintext_vector = plaintext_vector,
+                **kwargs
+            )
+            xs.append(x)
+        end_time   = time()
+        encryption_time = end_time-start_time
+        return CipherschemeResult(
+			matrix         = xs, 
+			time           = encryption_time,
+			operation_type = "encrypt_fdhope"
+		)
+
+    def encryptVector(**kwargs):
+        plaintext_vector = kwargs.pop("plaintext_vector")
+        xs = []
+        for plaintext in plaintext_vector:
+            x = Fdhope.encrypt(
+                plaintext = plaintext,
+                **kwargs
+            )
+            xs.append(x)
+        return xs
+
     """
     Description: allows you to encrypt a plaintext using the previously generated keys, applying the FDHOPE encryption algorithm
     Attributes:
@@ -232,7 +262,7 @@ if __name__ == "__main__":
         [62.15,32.29],
         [59.47,36.04]
     ]
-
+    plaintext_matrix= np.array(plaintext_matrix)
     messagespace, cipherspace = Fdhope.keygen(
         dataset = plaintext_matrix, 
         n_range = 4, 
@@ -241,11 +271,17 @@ if __name__ == "__main__":
     print("Message space",messagespace)
     print("Cipher space",cipherspace)
 
-    
-    ciphertext = Fdhope.encrypt(
-        plaintext    = 34.44,
+    ciphertext_matrix = Fdhope.encryptMatrix(
+        plaintext_matrix = plaintext_matrix,
         sens         = 0.01,
         messagespace = messagespace,
         cipherspace  = cipherspace
-        )
-    print(ciphertext)
+    )
+    
+    #ciphertext = Fdhope.encrypt(
+    #    plaintext    = 34.44,
+    #    sens         = 0.01,
+    #    messagespace = messagespace,
+    #    cipherspace  = cipherspace
+    #    )
+    print(ciphertext_matrix.matrix)
