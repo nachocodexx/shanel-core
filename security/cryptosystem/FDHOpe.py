@@ -11,7 +11,6 @@ Description:
     used to facilitate the required UDM operation.
 """
 class Fdhope(object):
-
     """
     description: generates secret keys using the FDHOPE scheme.
     attributes: 
@@ -22,13 +21,13 @@ class Fdhope(object):
     def keygen(**kwargs): 
         dataset              = kwargs.get("dataset") #Cambiar nombre de variable
         minVal               = kwargs.get("minValue", 0)
-        max_range            = kwargs.get("max_range",5)
+        max_range            = kwargs.get("max_range",8)
         proportion           = kwargs.get("proportion", 5)
         Dshape               = Utils.getShapeOfMatrix(dataset)
         maxVal_messagespace  = round(Fdhope.findMax(dataset)) + 1 #+1 to be able to place the last element in the range
         maxVal_cipherspace   = maxVal_messagespace * proportion #indicates how much it grows with respect to the message space
         lenTriangle          = Dshape[0] * Dshape[1] #size of the lower interval of U
-        n_range              = random.randint(2,max_range) #Number of ranges created
+        n_range              = random.randint(3,max_range) #Number of ranges created
         messagespace,new_density = {}, {}
 
         _messagespace = Fdhope.generate_range_values( #Generate possible message space
@@ -60,6 +59,11 @@ class Fdhope(object):
                 if(current_min > global_max):
                     messagespace[new_key] = (global_max,current_max)#
                     global_max            = current_max
+            
+        index_maxmessagespace = len(messagespace)-1
+        index_maxrange = "RANGE_{}".format(index_maxmessagespace)
+        tuple_maxrange = (messagespace[index_maxrange][0],maxVal_messagespace)
+        messagespace[index_maxrange] = tuple_maxrange
 
         intervalLength = Fdhope.calculate_intervalLength( #Calculates the size of the intervals for the ciphertextspace
             density            = new_density, 
@@ -73,7 +77,6 @@ class Fdhope(object):
             range_ids     = intervalLength.keys(), #Extract keys to intervalLength
             ranges_values = np.cumsum([0] + list(intervalLength.values())) #Make the cumulative sum of the elements in intervalLength
         )
-
         return messagespace, cipherspace
         
     def encryptMatrix(**kwargs):
@@ -88,6 +91,7 @@ class Fdhope(object):
             xs.append(x)
         end_time   = time()
         encryption_time = end_time-start_time
+        
         return CipherschemeResult(
 			matrix         = xs, 
 			time           = encryption_time,
@@ -118,7 +122,6 @@ class Fdhope(object):
         sens         = kwargs.get("sens",0.01)
         messagespace = kwargs.get("messagespace")
         cipherspace  = kwargs.get("cipherspace")
-
         interval_id = Fdhope.getIntervalID( #returns the id of the range in which the plaintext is found
             plaintext    = plaintext, 
             messagespace = messagespace
@@ -131,7 +134,7 @@ class Fdhope(object):
         
         cipherspace_min, cipherspace_max = Fdhope.getBoundary( #given the id, it returns the minimum and maximum value of that space.
             interval_id = interval_id, 
-            space       = cipherspace
+            space       = cipherspace,
         )
 
         scale      = (cipherspace_min - cipherspace_max) / (messagespace_min - messagespace_max) #
@@ -139,8 +142,7 @@ class Fdhope(object):
         ciphertext = cipherspace_min + scale * (abs(plaintext) - messagespace_min) + delta # ciphertext generated
 
         if (plaintext < 0): #if the plaintext is negative
-            ciphertext = ciphertext * (-1) #the ciphertext preserves the sign of the plaintext
-
+            ciphertext = ciphertext * (-1) #the ciphertext preserves the sign of the plaintext       
         return ciphertext
 
 
@@ -152,7 +154,6 @@ class Fdhope(object):
         Dshape             = Utils.getShapeOfMatrix(dataset)
         messagespace       = kwargs.get("messagespace")
         dens               = []
-
         for plaintext_matrix in dataset:
             for plaintext_vector in plaintext_matrix:
                 if len(Dshape) == 3: #in the case of an EU matrix, it has one more dimension
@@ -182,12 +183,10 @@ class Fdhope(object):
         lenTriangle        = kwargs.get("lenTriangle",1)
         maxVal_cipherspace = kwargs.get("maxVal_cipherspace")
         intervalLenght     = {}
-
         for key, value in density.items():
             ratio               = value/lenTriangle
             il                  = maxVal_cipherspace * ratio
             intervalLenght[key] = round(il)
-    
         return intervalLenght
 
 
@@ -197,7 +196,6 @@ class Fdhope(object):
     def generate_range_keys(**kwargs):
         n_range   = kwargs.get("n_range")
         range_ids = []
-        
         for i in range(n_range):
             id = 'RANGE_{}'.format(i)
             range_ids.append(id)
@@ -212,9 +210,8 @@ class Fdhope(object):
         maxValue      = kwargs.get("maxValue") # Maximum value of the ranges.
         n_range       = kwargs.get("n_range")  # Number of ranks
         range_ids     = kwargs.get("range_ids",Fdhope.generate_range_keys(n_range = n_range)) # Generate array of ids
-        ranges_values = kwargs.get("ranges_values",[minValue] + sorted([random.randint(2,maxValue) for _ in range(n_range-1)]) + [maxValue]) #Generate random ranges values
+        ranges_values = kwargs.get("ranges_values",[minValue] + sorted([np.random.uniform(minValue+0.2,maxValue) for _ in range(n_range-1)]) + [maxValue]) #Generate random ranges values
         rangos        = {} # Dictionary for ranges
-        
         for index,range_id in enumerate(range_ids):
             minVal           = ranges_values[index]
             maxVal           = maxValue+1 if (index == n_range-1) else ranges_values[index+1]
@@ -235,11 +232,10 @@ class Fdhope(object):
     def getIntervalID(**kwargs):
         plaintext    = abs(kwargs.get("plaintext",0))
         messagespace = kwargs.get("messagespace")
-        
         for key, value in messagespace.items():
             if (plaintext >= value[0] and plaintext < value[1]):
                 return key
-
+        
 
     """
     Description: Given "range_id" get min and max of message space
@@ -247,22 +243,25 @@ class Fdhope(object):
     def getBoundary(**kwargs):
         interval_id = kwargs.get("interval_id")
         space       = kwargs.get("space")   
-
         value       = space.get(interval_id)
         li          = value[0]
         hi          = value[1]
+
+        
+        
         return li, hi
         
 
 if __name__ == "__main__":
-    plaintext_matrix = [
-        [0.73,8.84],
-        [49.93,34.44],
-        [0.57,65.04],
-        [62.15,32.29],
-        [59.47,36.04]
-    ]
-    plaintext_matrix= np.array(plaintext_matrix)
+    # plaintext_matrix = [
+    #     [0.73,8.84],
+    #     [49.93,34.44],
+    #     [0.57,65.04],
+    #     [62.15,32.29],
+    #     [59.47,36.04]
+    # ]
+    plaintext_matrix = np.random.uniform(low=0,high=1, size=(5,2))
+    plaintext_matrix = np.array(plaintext_matrix)
     messagespace, cipherspace = Fdhope.keygen(
         dataset = plaintext_matrix, 
         n_range = 4, 
@@ -273,7 +272,7 @@ if __name__ == "__main__":
 
     ciphertext_matrix = Fdhope.encryptMatrix(
         plaintext_matrix = plaintext_matrix,
-        sens         = 0.01,
+        sens         = 0.001,
         messagespace = messagespace,
         cipherspace  = cipherspace
     )
