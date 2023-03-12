@@ -3,6 +3,7 @@ from utils.Utils import Utils
 from security.cryptosystem.FDHOpe import Fdhope
 from time import time
 from interfaces.dataowner_result import DataownerResult
+from logger.Dumblogger import DumbLogger
 
 """
 Description:
@@ -39,9 +40,10 @@ class DataOwner(object):
 	def outsourcedData(self,**kwargs):
 		plaintext_matrix = kwargs.get("plaintext_matrix",[[]])
 		Dshape           = Utils.getShapeOfMatrix(plaintext_matrix)
-		a                = kwargs.get("attributes",  Dshape[1] )
+		a                = kwargs.get("attributes", Dshape[1] )
 		threshold        = kwargs.get("threshold",0.01)
 		algorithm        = kwargs.get("algorithm","SKMEANS")
+		logger           = kwargs.get("logger",DumbLogger())
 
 		encryption_result = self.liu_scheme.encryptMatrix( #The plaintext is sent to Liu scheme to encrypt
 			plaintext_matrix = plaintext_matrix,
@@ -53,7 +55,8 @@ class DataOwner(object):
 		U, encrypted_threshold = self.get_U( #U is generated according to the chosen algorithm
 			algorithm         = algorithm,
 			plaintext_matrix  = plaintext_matrix,
-			threshold         = threshold
+			threshold         = threshold,
+			logger = logger
 		)
 		udm_time = time() - start_time_udm
 
@@ -78,6 +81,7 @@ class DataOwner(object):
 		plaintext_matrix = kwargs.get("plaintext_matrix")
 		threshold        = kwargs.get("threshold")
 		algorithm        = kwargs.get("algorithm")
+		logger           = kwargs.get("logger",DumbLogger())
 		encrypted_threshold = 0 #threshold is 0 if not required by the algorithm
 
 		if (algorithm == "SKMEANS"): 
@@ -100,7 +104,8 @@ class DataOwner(object):
 				plaintext_matrix = plaintext_matrix
 			)
 			self.messageIntervals, self.cypherIntervals = Fdhope.keygen( #the intervals (SK) of each space are generated
-			dataset = ED
+			dataset = ED,
+			logger = logger
 			)
 			U = self.encrypt_U( #Matrix EU is encrypted
 				U = ED,
@@ -109,7 +114,8 @@ class DataOwner(object):
 			encrypted_threshold = Fdhope.encrypt( #Threshold is encrypted
 				plaintext    = threshold,
 				messagespace = self.messageIntervals, 
-				cipherspace  = self.cypherIntervals
+				cipherspace  = self.cypherIntervals,
+				logger = logger
 			)
 
 		return U, encrypted_threshold

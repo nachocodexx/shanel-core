@@ -15,9 +15,6 @@ Variables:
 """
 class Dbsnnc(object):
 
-	def __init__(self,**kwargs):
-		self.dataowner = kwargs.get("dataowner")
-
 	def run(**kwargs):
 		startTime          = time()
 		ED                 = kwargs.get("EDM")
