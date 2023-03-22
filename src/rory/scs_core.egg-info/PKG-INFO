@@ -1,0 +1,10 @@
+Metadata-Version: 2.1
+Name: scs-core
+Version: 0.0.1
+Summary: Core modules of Secure Clustering System (SCS)
+Home-page: https://github.com/nachocode/shanel_core
+Author: Shanel Reyes
+Author-email: Nacho Castillo <jesus.castillo.b@cinvestav.mx>, Shanel Reyes <sreyes@cinvestav.mx>
+License: MIT
+Project-URL: Github, https://github.com/ShanelReyes/scs-core
+Description-Content-Type: text/markdown
